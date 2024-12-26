@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../views/custom_text_field.dart';
-import '../views/gender_selection_ui.dart';
+import '../models/custom_text_field.dart';
+import '../models/gender_selection_ui.dart';
 import 'login_screen.dart';
 
 class RegisterScreenEldery extends StatelessWidget {

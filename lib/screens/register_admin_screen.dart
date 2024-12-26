@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../views/custom_text_field.dart';
+import '../models/custom_text_field.dart';
 import 'login_screen.dart';
 
 class RegisterScreenAdmin extends StatelessWidget {

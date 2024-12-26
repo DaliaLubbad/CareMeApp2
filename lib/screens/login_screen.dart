@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../views/custom_text_field.dart';
+import '../models/custom_text_field.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});

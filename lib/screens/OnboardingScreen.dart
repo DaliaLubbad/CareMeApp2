@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../views/OnboardingView1.dart';
+import '../models/OnboardingView1.dart';
 import 'account_type_screen.dart';
 import 'on_boarding_screen1.dart';
 
