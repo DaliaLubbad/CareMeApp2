@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/OnboardingView1.dart';
 import 'account_type_screen.dart';
+import 'login_screen.dart';
 import 'on_boarding_screen1.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -68,7 +69,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (context) =>
-                            AccountTypeScreen(),
+                            LoginScreen(),
                       ),
                     );
                   },

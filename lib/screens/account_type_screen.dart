@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:test1/screens/register_admin_screen.dart';
+import 'package:test1/screens/register_eldery_screen.dart';
 
 class AccountTypeScreen extends StatefulWidget {
   const AccountTypeScreen({super.key});
@@ -13,8 +15,30 @@ class _AccountTypeScreenState extends State<AccountTypeScreen> {
   void selectAccountType(String accountType) {
     setState(() {
       selectedAccountType = accountType;
+      print("Selected Account Type: $selectedAccountType");
     });
   }
+
+  void navigateToNextScreen() {
+    print("Navigating with account type: $selectedAccountType");
+
+    if (selectedAccountType == 'service_provider') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => RegisterScreenAdmin()),
+      );
+    } else if (selectedAccountType == 'elderly') {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => RegisterScreenEldery()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select an account type')),
+      );
+    }
+  }
+
 
   Widget _buildAccountOption({
     required String accountType,
@@ -29,7 +53,7 @@ class _AccountTypeScreenState extends State<AccountTypeScreen> {
         GestureDetector(
           onTap: () => selectAccountType(accountType),
           child: Container(
-            padding: EdgeInsets.all(20),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(10),
@@ -67,13 +91,10 @@ class _AccountTypeScreenState extends State<AccountTypeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Get screen size
     final screenSize = MediaQuery.of(context).size;
-    final double screenWidth = screenSize.width;
-    final double screenHeight = screenSize.height;
-
-    // Adjust padding and image height based on screen size
-    double imageHeight = screenWidth * 0.2; // Adjust this for better scaling
+    double screenWidth = screenSize.width;
+    double screenHeight = screenSize.height;
+    double imageHeight = screenWidth * 0.2;
 
     return Scaffold(
       body: SafeArea(
@@ -89,7 +110,7 @@ class _AccountTypeScreenState extends State<AccountTypeScreen> {
                     Text(
                       "Choose account type",
                       style: TextStyle(
-                        fontSize: screenWidth * 0.08, // Dynamic font size
+                        fontSize: screenWidth * 0.08,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
                       ),
@@ -98,7 +119,7 @@ class _AccountTypeScreenState extends State<AccountTypeScreen> {
                     Text(
                       "Please choose the type of account you\nwould like to create",
                       style: TextStyle(
-                        fontSize: screenWidth * 0.05, // Dynamic font size
+                        fontSize: screenWidth * 0.05,
                         color: Colors.black54,
                       ),
                     ),
@@ -122,19 +143,19 @@ class _AccountTypeScreenState extends State<AccountTypeScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: navigateToNextScreen,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF308A99),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  child: Padding(
+                  child: const Padding(
                     padding: EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 115,
+                      vertical: 12,
+                      horizontal: 115,
                     ),
-                    child: const Text(
+                    child: Text(
                       "Confirm",
                       style: TextStyle(
                         color: Colors.white,
@@ -152,3 +173,4 @@ class _AccountTypeScreenState extends State<AccountTypeScreen> {
     );
   }
 }
+
