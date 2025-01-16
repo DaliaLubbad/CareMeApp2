@@ -3,17 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:test1/screens/OnboardingScreen.dart';
 import 'package:test1/screens/account_type_screen.dart';
 import 'package:test1/screens/add_activity_screen.dart';
-import 'package:test1/screens/booking_screen.dart';
+import 'package:test1/screens/MedicalProviderProfileScreen.dart';
 import 'package:test1/screens/document_management.dart';
 import 'package:test1/screens/emergency_services.dart';
+import 'package:test1/screens/home_view.dart';
 import 'package:test1/screens/login_screen.dart';
-import 'package:test1/screens/medical_services_screen.dart';
 import 'package:test1/screens/on_boarding_screen1.dart';
 import 'package:test1/screens/register_admin_screen.dart';
 import 'package:test1/screens/register_eldery_screen.dart';
 import 'package:test1/screens/social_activities.dart';
-
 import 'firebase_options.dart';
+import 'screens/AddMedicalInfoScreen.dart';
+import 'screens/MedicationListScreen.dart';
+import 'screens/SeniorDashboardScreen.dart';
+import 'screens/medical_service_providers_list.dart';
+import 'screens/medical_services_menu_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,18 +33,19 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+
       title: 'Flutter Demo',
       debugShowCheckedModeBanner: false,
-      //home: RegisterScreenAdmin(),
-      initialRoute: '/',
-      routes: {
-        '/': (context) => OnboardingScreen(),
-        '/OnboardingPage': (context) => OnboardingPage(),
-        '/AccountTypeScreen': (context) => AccountTypeScreen(),
-        '/RegisterScreenAdmin': (context) => RegisterScreenAdmin(),
-        '/RegisterScreenEldery': (context) => RegisterScreenEldery(),
-        '/login': (context) => LoginScreen(),
-      },
+      theme: ThemeData(
+        textSelectionTheme: TextSelectionThemeData(
+          cursorColor: Color(0xFF308A99), // Change cursor color
+          selectionHandleColor: Color(0xFF308A99), // Change the color of the ball
+          selectionColor: Color(0x55308A99), // Optional: highlight color when selecting text
+        ),
+      ),
+
+      home:SeniorDashboardScreen(   name: 'dalia', heartRate: '55', calories: '55', weight: '55',),
+
     );
   }
 }

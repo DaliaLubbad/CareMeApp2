@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:test1/screens/register_admin_screen.dart';
 import 'package:test1/screens/register_eldery_screen.dart';
 
+import 'login_screen.dart';
+
 class AccountTypeScreen extends StatefulWidget {
   const AccountTypeScreen({super.key});
 
@@ -20,24 +22,21 @@ class _AccountTypeScreenState extends State<AccountTypeScreen> {
   }
 
   void navigateToNextScreen() {
-    print("Navigating with account type: $selectedAccountType");
-
-    if (selectedAccountType == 'service_provider') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => RegisterScreenAdmin()),
-      );
-    } else if (selectedAccountType == 'elderly') {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => RegisterScreenEldery()),
-      );
-    } else {
+    if (selectedAccountType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select an account type')),
       );
+      return;
     }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => LoginScreen(role: selectedAccountType!), // Pass role
+      ),
+    );
   }
+
 
 
   Widget _buildAccountOption({
