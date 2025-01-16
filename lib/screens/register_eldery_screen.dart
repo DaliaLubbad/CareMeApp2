@@ -113,7 +113,7 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
                       Navigator.of(context).pop();
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => LoginScreen(role: '',)),
+                        MaterialPageRoute(builder: (context) => LoginScreen(role: 'elderly',)),
                       );
                     },
                     child: const Text(
@@ -253,6 +253,7 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
                     child: RadioListTile<String>(
                       title: const Text("Male"),
                       value: "male",
+                      activeColor: const Color(0xff308A99),
                       groupValue: _gender,
                       onChanged: (value) {
                         setState(() {
@@ -266,6 +267,7 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
                       title: const Text("Female"),
                       value: "female",
                       groupValue: _gender,
+                      activeColor: const Color(0xff308A99),
                       onChanged: (value) {
                         setState(() {
                           _gender = value;

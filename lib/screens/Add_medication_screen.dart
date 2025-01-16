@@ -145,13 +145,14 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFF308A99),
+        foregroundColor: Colors.white,
         elevation: 0,
         title: Text(
           widget.medication == null ? "Add Medicine" : "Update Medicine", // Dynamic title
-          style: TextStyle(color: Colors.black),
+          style: TextStyle(color: Colors.white),
         ),
-        iconTheme: IconThemeData(color: Colors.black),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
 
       body: Padding(

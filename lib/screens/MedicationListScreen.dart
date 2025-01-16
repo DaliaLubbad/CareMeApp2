@@ -63,6 +63,8 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Medication Reminder"),
+        backgroundColor: const Color(0xFF308A99),
+        foregroundColor: Colors.white,
       ),
       body: Column(
         children: [

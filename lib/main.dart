@@ -4,14 +4,14 @@ import 'package:test1/screens/OnboardingScreen.dart';
 import 'package:test1/screens/account_type_screen.dart';
 import 'package:test1/screens/add_activity_screen.dart';
 import 'package:test1/screens/MedicalProviderProfileScreen.dart';
-import 'package:test1/screens/document_management.dart';
+import 'package:test1/screens/DocumentManagementScreen.dart';
 import 'package:test1/screens/emergency_services.dart';
 import 'package:test1/screens/home_view.dart';
 import 'package:test1/screens/login_screen.dart';
 import 'package:test1/screens/on_boarding_screen1.dart';
 import 'package:test1/screens/register_admin_screen.dart';
 import 'package:test1/screens/register_eldery_screen.dart';
-import 'package:test1/screens/social_activities.dart';
+import 'package:test1/screens/SocialActivitiesListScreen.dart';
 import 'firebase_options.dart';
 import 'screens/AddMedicalInfoScreen.dart';
 import 'screens/MedicationListScreen.dart';
@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
 
-      home:SeniorDashboardScreen(   name: 'dalia', heartRate: '55', calories: '55', weight: '55',),
+      home:AccountTypeScreen(),
 
     );
   }

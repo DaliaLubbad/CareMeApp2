@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'ConsultationsScreen.dart';
 import 'MedicationListScreen.dart';
 import 'medical_service_providers_list.dart';
 
@@ -69,7 +70,14 @@ class MedicalServicesMenuScreen extends StatelessWidget {
               // Medical Consultation Button
               OutlinedButton(
                 onPressed: () {
-                  // Navigation logic for Medical Consultation can be added here
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ConsultationsScreen(
+                        seniorId: seniorId, consultationType: 'Medical',
+                      ),
+                    ),
+                  );
                 },
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 15),

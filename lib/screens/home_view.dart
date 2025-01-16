@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'AddMedicalInfoScreen.dart';
+import 'DocumentManagementScreen.dart';
 import 'MedicationListScreen.dart';
+import 'SeniorDashboardScreen.dart';
+import 'bill_payments_screen.dart';
 import 'medical_services_menu_screen.dart';
-
+import 'SocialActivitiesListScreen.dart';
 
 class HomePage extends StatefulWidget {
   final String senior_id; // Accept the userId from the login screen
@@ -48,8 +50,6 @@ class _HomePageState extends State<HomePage> {
       );
     }
   }
-
-
   Future<void> _fetchUserDetails() async {
     try {
       final userDoc = await FirebaseFirestore.instance
@@ -96,25 +96,36 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       CircleAvatar(
                         backgroundColor: Colors.grey.shade300,
-                        child:
-                        const Icon(Icons.person, color: Colors.black),
+                        child: const Icon(Icons.person, color: Colors.black),
                       ),
                       const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            userName, // Display the fetched user name
-                            style: const TextStyle(
-                              color: Colors.black,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                      GestureDetector(
+                        onTap: () {
+                          // Navigate to the user's profile screen
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SeniorDashboardScreen(seniorId: widget.senior_id), // Replace `UserProfileScreen` with the actual screen you want to navigate to
                             ),
-                          ),
-                        ],
+                          );
+                        },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              userName, // Display the fetched user name
+                              style: const TextStyle(
+                                color: Colors.black,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
+
                   // Actions
                   const Row(
                     children: [
@@ -128,23 +139,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 16), // Add space after top section
-
-            // Search Bar
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search',
-                  prefixIcon: const Icon(Icons.search),
-                  filled: true,
-                  fillColor: Colors.grey.shade200,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-            ),
 
             // Header Image
             Padding(
@@ -182,9 +176,32 @@ class _HomePageState extends State<HomePage> {
 
                     children: [
                       _buildServiceCard('Medical Services', 'assets/images/medical_services.png', () => navigateToMedicalServices(widget.senior_id),),
-                      _buildServiceCard('Social Activities', 'assets/images/social_activities.png', () {}),
-                      _buildServiceCard('Document Management', 'assets/images/document_management.png', () {}),
-                      _buildServiceCard('Bill Payment', 'assets/images/bill_payment.png', () {}),
+                      _buildServiceCard('Social Activities', 'assets/images/social_activities.png',   () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SocialActivitiesListScreen(
+                            seniorId: widget.senior_id, // Pass the correct senior ID
+                          ),
+                        ),
+                      ),
+                      ),
+                      _buildServiceCard('Document Management', 'assets/images/document_management.png', () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DocumentManagementScreen(
+                            seniorId: widget.senior_id, // Pass the correct senior ID
+                          ),
+                        ),
+                      ),),//B
+                      _buildServiceCard('Bill Payment', 'assets/images/bill_payment.png', () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BillPaymentScreen(
+                            seniorId: widget.senior_id, // Pass the correct senior ID
+                          ),
+                        ),
+                      ),
+                      ),
                       _buildServiceCard('Technical Support', 'assets/images/technical_support.png', () {}),
                       _buildServiceCard('Legal and Financial Advice', 'assets/images/legal_and_financial_advice.png', () {}),
                       _buildServiceCard('Emergency Services', 'assets/images/emergency services.png', () {}),

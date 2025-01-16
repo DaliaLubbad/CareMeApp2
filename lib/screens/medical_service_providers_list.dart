@@ -50,19 +50,26 @@ class _MedicalServiceProviderScreenState extends State<MedicalServiceProviderScr
         .where('senior_id', isEqualTo: widget.seniorId)
         .get();
 
-    final currentRequest = requestsSnapshot.docs.isNotEmpty
-        ? requestsSnapshot.docs.first.data()
-        : null;
+    // Check if a "Requested" provider exists
+    String? requestedProviderId;
+    String? requestedStatus;
+    if (requestsSnapshot.docs.isNotEmpty) {
+      final currentRequest = requestsSnapshot.docs.first.data();
+      requestedProviderId = currentRequest['user_id'];
+      requestedStatus = currentRequest['status'];
+    }
 
+    // Map providers and set status
     return providersSnapshot.docs.map((doc) {
       final provider = doc.data();
-      provider['isRequested'] =
-          currentRequest != null && currentRequest['user_id'] == doc.id;
-      provider['requestStatus'] = currentRequest?['status'];
-      provider['user_id'] = doc.id; // Save user ID for reference
+      provider['isRequested'] = doc.id == requestedProviderId;
+      provider['requestStatus'] = doc.id == requestedProviderId ? requestedStatus : null;
+      provider['user_id'] = doc.id; // Include provider's ID
       return provider;
     }).toList();
   }
+
+
 
   void _bookProvider(String providerId, String providerName) async {
     try {
@@ -113,7 +120,9 @@ class _MedicalServiceProviderScreenState extends State<MedicalServiceProviderScr
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
+              child: const Text('OK',
+                style: TextStyle(color:Color(0xFF308A99), ),
+              ),
             ),
           ],
         );
@@ -126,8 +135,8 @@ class _MedicalServiceProviderScreenState extends State<MedicalServiceProviderScr
     return Scaffold(
       appBar: AppBar(
         title: const Text("Medical Service Providers"),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: const Color(0xFF308A99),
+        foregroundColor: Colors.white,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -173,15 +182,13 @@ class _MedicalServiceProviderScreenState extends State<MedicalServiceProviderScr
                     return name.contains(_searchQuery);
                   }).toList();
 
+// Sort so the "Requested" provider appears first
                   filteredProviders.sort((a, b) {
-                    if (a['requestStatus'] == 'requested' && b['requestStatus'] != 'requested') {
-                      return -1; // Requested goes to the top
-                    }
-                    if (b['requestStatus'] == 'requested' && a['requestStatus'] != 'requested') {
-                      return 1; // Others go below requested
-                    }
-                    return 0;
+                    if (a['isRequested'] == true && b['isRequested'] != true) return -1;
+                    if (b['isRequested'] == true && a['isRequested'] != true) return 1;
+                    return 0; // Maintain the default order otherwise
                   });
+
 
                   if (filteredProviders.isEmpty) {
                     return const Center(
@@ -202,9 +209,9 @@ class _MedicalServiceProviderScreenState extends State<MedicalServiceProviderScr
                             const Divider(thickness: 1.5, color: Colors.grey),
                           Card(
                             margin: const EdgeInsets.symmetric(vertical: 8),
-                            child: ListTile(
+                            child:
+                            ListTile(
                               onTap: () {
-                                // Navigate to the profile screen and pass provider data
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -221,23 +228,26 @@ class _MedicalServiceProviderScreenState extends State<MedicalServiceProviderScr
                                     : null,
                               ),
                               title: Text(provider['fullName'] ?? 'Unknown'),
-
                               trailing: ElevatedButton(
-                                onPressed: isRequested
-                                    ? null
+                                onPressed: provider['isRequested']
+                                    ? null // Disable the button for requested/accepted states
                                     : () => _bookProvider(provider['user_id'], provider['fullName']),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: isRequested
-                                      ? (requestStatus == 'accepted'
-                                      ? Colors.green
-                                      : Colors.grey)
-                                      : const Color(0xFF308A99),
+                                  backgroundColor: provider['isRequested']
+                                      ? (provider['requestStatus'] == 'accepted'
+                                      ? Colors.green // Green for "Accepted"
+                                      : Colors.grey) // Grey for "Requested"
+                                      : const Color(0xFF308A99), // Teal for "Request Now"
                                 ),
-                                child: Text(isRequested
-                                    ? (requestStatus == 'accepted' ? "Accepted" : "Requested")
-                                    : "Request Now"),
+                                child: Text(
+                                  provider['isRequested']
+                                      ? (provider['requestStatus'] == 'accepted' ? "Accepted" : "Requested")
+                                      : "Request Now",
+                                  style: const TextStyle(color: Colors.white),
+                                ),
                               ),
                             ),
+
                           ),
                           if (index == 0 && requestStatus == 'requested')
                             const Divider(thickness: 1.5, color: Colors.grey),
@@ -248,6 +258,7 @@ class _MedicalServiceProviderScreenState extends State<MedicalServiceProviderScr
                 },
               ),
             ),
+
           ],
         ),
       ),
