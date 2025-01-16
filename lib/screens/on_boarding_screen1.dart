@@ -3,6 +3,8 @@ import 'package:test1/screens/login_screen.dart';
 import 'package:test1/screens/register_admin_screen.dart';
 import 'package:test1/screens/register_eldery_screen.dart';
 
+import 'account_type_screen.dart';
+
 class OnboardingPage extends StatefulWidget {
   @override
   _OnboardingPageState createState() => _OnboardingPageState();
@@ -54,7 +56,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => LoginScreen(),
+                        builder: (context) => AccountTypeScreen(),
                       ),
                     );
                   });

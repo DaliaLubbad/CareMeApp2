@@ -16,7 +16,6 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Controllers to capture input data
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -24,37 +23,49 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
   final TextEditingController _dobController = TextEditingController();
   String? _gender;
 
-  // Method to handle user registration
   Future<void> _register() async {
     try {
-      // 1. Create User with Firebase Authentication
+      String email = _emailController.text.trim();
+      String password = _passwordController.text;
+
+      if (!isValidEmail(email)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Please enter a valid email address.')),
+        );
+        return;
+      }
+
+      // Create User with Firebase Authentication
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-        email: _emailController.text,
-        password: _passwordController.text,
+        email: email,
+        password: password,
       );
 
-      // 2. Save User Additional Data to Firestore
-      await _firestore.collection('users').doc(userCredential.user!.uid).set({
-        'fullName': _fullNameController.text,
-        'phone': _phoneController.text,
-        'email': _emailController.text,
-        'dob': _dobController.text,
+      // Save User Additional Data to Firestore
+      await _firestore.collection('seniors').doc(userCredential.user!.uid).set({
+        'fullName': _fullNameController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'email': email,
+        'dob': _dobController.text.trim(),
         'gender': _gender,
-        'role': 'elderly', // Role for elderly users
+        'role': 'elderly',
         'createdAt': Timestamp.now(),
       });
 
-      // 3. Show success dialog
       _showSuccessDialog();
     } catch (e) {
-      // Handle any errors that occur during registration
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: ${e.toString()}')),
       );
     }
   }
 
-  // Custom success dialog
+  bool isValidEmail(String email) {
+    return RegExp(
+        r"^[a-zA-Z0-9.a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,4}$"
+    ).hasMatch(email);
+  }
+
   void _showSuccessDialog() {
     showDialog(
       context: context,
@@ -81,7 +92,7 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
                 ),
                 const SizedBox(height: 10.0),
                 const Text(
-                  'You have successfully reset your password.',
+                  'You have successfully registered.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16.0,
@@ -99,10 +110,10 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
                       ),
                     ),
                     onPressed: () {
-                      Navigator.of(context).pop(); // Close the dialog
+                      Navigator.of(context).pop();
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => LoginScreen()),
+                        MaterialPageRoute(builder: (context) => LoginScreen(role: '',)),
                       );
                     },
                     child: const Text(
@@ -157,8 +168,13 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
               ),
               const SizedBox(height: 30.0),
 
-              // Full Name Field
-              const _FieldLabel(label: 'Full Name'),
+              const Padding(
+                padding: EdgeInsets.only(left: 5, bottom: 5),
+                child: Text(
+                  'Full Name',
+                  style: TextStyle(color: Colors.black, fontSize: 16),
+                ),
+              ),
               CustomTextField(
                 controller: _fullNameController,
                 hintText: 'Enter your name',
@@ -166,8 +182,13 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
               ),
               const SizedBox(height: 20.0),
 
-              // Phone Number Field
-              const _FieldLabel(label: 'Phone Number'),
+              const Padding(
+                padding: EdgeInsets.only(left: 5, bottom: 5),
+                child: Text(
+                  'Phone Number',
+                  style: TextStyle(color: Colors.black, fontSize: 16),
+                ),
+              ),
               CustomTextField(
                 controller: _phoneController,
                 hintText: 'Enter phone number',
@@ -175,8 +196,13 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
               ),
               const SizedBox(height: 20.0),
 
-              // Email Field
-              const _FieldLabel(label: 'E-mail'),
+              const Padding(
+                padding: EdgeInsets.only(left: 5, bottom: 5),
+                child: Text(
+                  'E-mail',
+                  style: TextStyle(color: Colors.black, fontSize: 16),
+                ),
+              ),
               CustomTextField(
                 controller: _emailController,
                 hintText: 'Enter your E-mail',
@@ -184,8 +210,13 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
               ),
               const SizedBox(height: 20.0),
 
-              // Password Field
-              const _FieldLabel(label: 'Password'),
+              const Padding(
+                padding: EdgeInsets.only(left: 5, bottom: 5),
+                child: Text(
+                  'Password',
+                  style: TextStyle(color: Colors.black, fontSize: 16),
+                ),
+              ),
               CustomTextField(
                 controller: _passwordController,
                 hintText: 'Enter password',
@@ -194,8 +225,13 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
               ),
               const SizedBox(height: 20.0),
 
-              // Date of Birth Field
-              const _FieldLabel(label: 'Date of Birth'),
+              const Padding(
+                padding: EdgeInsets.only(left: 5, bottom: 5),
+                child: Text(
+                  'Date of Birth',
+                  style: TextStyle(color: Colors.black, fontSize: 16),
+                ),
+              ),
               CustomTextField(
                 controller: _dobController,
                 hintText: 'DD/MM/YYYY',
@@ -203,16 +239,50 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
               ),
               const SizedBox(height: 20.0),
 
-              // Gender Selection
-              const GenderSelection(),
+              // Replace this in your build method where GenderSelection is used.
+              const Padding(
+                padding: EdgeInsets.only(left: 5, bottom: 5),
+                child: Text(
+                  'Gender',
+                  style: TextStyle(color: Colors.black, fontSize: 16),
+                ),
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: RadioListTile<String>(
+                      title: const Text("Male"),
+                      value: "male",
+                      groupValue: _gender,
+                      onChanged: (value) {
+                        setState(() {
+                          _gender = value;
+                        });
+                      },
+                    ),
+                  ),
+                  Expanded(
+                    child: RadioListTile<String>(
+                      title: const Text("Female"),
+                      value: "female",
+                      groupValue: _gender,
+                      onChanged: (value) {
+                        setState(() {
+                          _gender = value;
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              ),
+
               const SizedBox(height: 30.0),
 
-              // Register Button
               SizedBox(
                 width: double.infinity,
                 height: 50.0,
                 child: ElevatedButton(
-                  onPressed: _register, // Call the registration function
+                  onPressed: _register,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xff308A99),
                     shape: RoundedRectangleBorder(
@@ -228,22 +298,6 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _FieldLabel extends StatelessWidget {
-  final String label;
-  const _FieldLabel({super.key, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 5, bottom: 5),
-      child: Text(
-        label,
-        style: const TextStyle(color: Colors.black, fontSize: 16),
       ),
     );
   }

@@ -22,8 +22,25 @@ class _RegisterScreenAdminState extends State<RegisterScreenAdmin> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
+  String? _selectedRole; // Selected role
+
+  final List<String> _roles = [
+    'medical',
+    'financial',
+    'legal',
+    'family member'
+  ]; // Enum values
+
   Future<void> _register() async {
     try {
+      // Validate role selection
+      if (_selectedRole == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select a role.')),
+        );
+        return;
+      }
+
       // Create User with Email and Password
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
@@ -31,12 +48,12 @@ class _RegisterScreenAdminState extends State<RegisterScreenAdmin> {
       );
 
       // Save Additional Data to Firestore
-      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+      await _firestore.collection('other_users').doc(userCredential.user!.uid).set({
         'fullName': _fullNameController.text.trim(),
         'phone': _phoneController.text.trim(),
         'email': _emailController.text.trim(),
         'description': _descriptionController.text.trim(),
-        'role': 'service_provider', // or 'elderly'
+        'role': _selectedRole, // Save selected role
         'createdAt': Timestamp.now(),
       });
 
@@ -69,7 +86,7 @@ class _RegisterScreenAdminState extends State<RegisterScreenAdmin> {
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => LoginScreen()),
+                    MaterialPageRoute(builder: (context) => LoginScreen(role: '',)),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -86,7 +103,6 @@ class _RegisterScreenAdminState extends State<RegisterScreenAdmin> {
       },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -114,25 +130,21 @@ class _RegisterScreenAdminState extends State<RegisterScreenAdmin> {
               const Text('Create a New account', style: TextStyle(fontSize: 20)),
               const SizedBox(height: 30.0),
 
-              // Full Name Field
               const _FieldLabel(label: 'Full Name'),
               CustomTextField(controller: _fullNameController, hintText: 'Enter your name', icon: Icons.person),
 
               const SizedBox(height: 20.0),
 
-              // Phone Number Field
               const _FieldLabel(label: 'Phone Number'),
               CustomTextField(controller: _phoneController, hintText: 'Enter phone number', icon: Icons.phone),
 
               const SizedBox(height: 20.0),
 
-              // Email Field
               const _FieldLabel(label: 'E-mail'),
               CustomTextField(controller: _emailController, hintText: 'Enter your E-mail', icon: Icons.email),
 
               const SizedBox(height: 20.0),
 
-              // Password Field
               const _FieldLabel(label: 'Password'),
               CustomTextField(
                 controller: _passwordController,
@@ -143,7 +155,33 @@ class _RegisterScreenAdminState extends State<RegisterScreenAdmin> {
 
               const SizedBox(height: 20.0),
 
-              // Description Field
+              const _FieldLabel(label: 'Role'),
+              DropdownButtonFormField<String>(
+                value: _selectedRole,
+                items: _roles.map((role) {
+                  return DropdownMenuItem<String>(
+                    value: role,
+                    child: Text(role),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedRole = value;
+                  });
+                },
+                decoration: InputDecoration(
+                  filled: true,
+                  fillColor: const Color(0xFFF1F4FD),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(15.0),
+                    borderSide: BorderSide.none,
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                ),
+              ),
+
+              const SizedBox(height: 20.0),
+
               const _FieldLabel(label: 'Description'),
               TextField(
                 controller: _descriptionController,
@@ -161,7 +199,6 @@ class _RegisterScreenAdminState extends State<RegisterScreenAdmin> {
 
               const SizedBox(height: 30.0),
 
-              // Register Button
               SizedBox(
                 width: double.infinity,
                 height: 50.0,
