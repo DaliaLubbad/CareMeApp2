@@ -1,7 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:encrypt/encrypt.dart' as encrypt;
-
 
 class AddBankCardScreen extends StatefulWidget {
   final String seniorId;
@@ -21,27 +21,43 @@ class _AddBankCardScreenState extends State<AddBankCardScreen> {
   bool _isLoading = true;
   bool _isUpdating = false;
 
+  // 32-character encryption key (AES requires 16, 24, or 32 characters)
+  final String encryptionKey = "thisIsA32CharacterLongSecretKey!@#123";
+
   @override
   void initState() {
     super.initState();
     _fetchCardData();
   }
+
+  // Encrypt CVV before storing
   String _encryptCVV(String cvv) {
-    final key = encrypt.Key.fromUtf8('your-32-char-secret-key');
+    final key = encrypt.Key.fromUtf8('12345678901234567890123456789012'); // 32-byte key
     final iv = encrypt.IV.fromLength(16);
     final encrypter = encrypt.Encrypter(encrypt.AES(key));
 
     final encrypted = encrypter.encrypt(cvv, iv: iv);
-    return encrypted.base64;
+    return '${iv.base64}:${encrypted.base64}'; // Store IV and encrypted data
   }
-  String _decryptCVV(String encryptedCVV) {
-    final key = encrypt.Key.fromUtf8('your-32-char-secret-key');
-    final iv = encrypt.IV.fromLength(16);
-    final encrypter = encrypt.Encrypter(encrypt.AES(key));
 
-    final decrypted = encrypter.decrypt64(encryptedCVV, iv: iv);
-    return decrypted;
+
+  // Decrypt CVV before displaying
+  String _decryptCVV(String encryptedCVV) {
+    try {
+      final key = encrypt.Key.fromUtf8('12345678901234567890123456789012'); // 32-byte key
+      final parts = encryptedCVV.split(':'); // Extract IV and encrypted data
+      if (parts.length != 2) return 'Error'; // Handle invalid format
+
+      final iv = encrypt.IV.fromBase64(parts[0]); // Get IV
+      final encryptedData = parts[1];
+
+      final encrypter = encrypt.Encrypter(encrypt.AES(key));
+      return encrypter.decrypt64(encryptedData, iv: iv);
+    } catch (e) {
+      return 'Error'; // Handle decryption errors
+    }
   }
+
 
   Future<void> _fetchCardData() async {
     try {
@@ -56,7 +72,7 @@ class _AddBankCardScreenState extends State<AddBankCardScreen> {
         _cardNumberController.text = cardData['card_number'] ?? '';
         _cardHolderNameController.text = cardData['card_holder_name'] ?? '';
         _expiryDateController.text = cardData['expiry_date'] ?? '';
-        _cvvController.text = _decryptCVV(cardData['cvv']) ?? ''; // You may decrypt CVV here if necessary
+        _cvvController.text = _decryptCVV(cardData['cvv']);
 
         setState(() {
           _isUpdating = true;
@@ -89,7 +105,7 @@ class _AddBankCardScreenState extends State<AddBankCardScreen> {
       'card_number': _cardNumberController.text,
       'card_holder_name': _cardHolderNameController.text,
       'expiry_date': _expiryDateController.text,
-      'cvv': _encryptCVV(_cvvController.text), // Encrypt CVV here if needed
+      'cvv': _encryptCVV(_cvvController.text),
       'type': 'bank_card',
     };
 
