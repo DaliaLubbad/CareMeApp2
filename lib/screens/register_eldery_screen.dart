@@ -113,7 +113,7 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
                       Navigator.of(context).pop();
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => LoginScreen(role: 'elderly',)),
+                        MaterialPageRoute(builder: (context) => LoginScreen(userType: 'elderly',)),
                       );
                     },
                     child: const Text(

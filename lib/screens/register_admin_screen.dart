@@ -86,7 +86,7 @@ class _RegisterScreenAdminState extends State<RegisterScreenAdmin> {
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => LoginScreen(role: 'admin',)),
+                    MaterialPageRoute(builder: (context) => LoginScreen(userType: 'admin',)),
                   );
                 },
                 style: ElevatedButton.styleFrom(

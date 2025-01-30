@@ -32,7 +32,7 @@ class _AccountTypeScreenState extends State<AccountTypeScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => LoginScreen(role: selectedAccountType!), // Pass role
+        builder: (context) => LoginScreen(userType: selectedAccountType!), // Pass role
       ),
     );
   }
