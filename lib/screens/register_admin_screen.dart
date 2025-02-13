@@ -28,7 +28,8 @@ class _RegisterScreenAdminState extends State<RegisterScreenAdmin> {
     'medical',
     'financial',
     'legal',
-    'family member'
+    'family member',
+    'Technical Support'
   ]; // Enum values
 
   Future<void> _register() async {
@@ -86,7 +87,7 @@ class _RegisterScreenAdminState extends State<RegisterScreenAdmin> {
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => LoginScreen(userType: 'admin',)),
+                    MaterialPageRoute(builder: (context) => LoginScreen(role: 'admin',)),
                   );
                 },
                 style: ElevatedButton.styleFrom(

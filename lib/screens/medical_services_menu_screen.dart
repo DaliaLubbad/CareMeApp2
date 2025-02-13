@@ -1,128 +1,119 @@
 import 'package:flutter/material.dart';
-
 import 'ConsultationsScreen.dart';
 import 'MedicationListScreen.dart';
 import 'medical_service_providers_list.dart';
 
-class MedicalServicesMenuScreen extends StatelessWidget {
-  final String seniorId; // Add this parameter
+class MedicalServicesMenuScreen extends StatefulWidget {
+  final String seniorId;
 
   const MedicalServicesMenuScreen({Key? key, required this.seniorId}) : super(key: key);
+
+  @override
+  _MedicalServicesMenuScreenState createState() => _MedicalServicesMenuScreenState();
+}
+
+class _MedicalServicesMenuScreenState extends State<MedicalServicesMenuScreen> {
+  int _selectedIndex = -1; // -1 means no button is selected initially
+
+  void _onButtonPressed(int index, Widget screen) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    // Delay navigation by 1 second
+    Future.delayed(const Duration(seconds: 1), () {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => screen),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 150.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 20),
-              // Icon or Image
               Center(
                 child: Image.asset(
-                  'assets/images/icon.jpeg', // Replace with your actual image path
+                  'assets/images/medical.png',
                   height: 150,
                   width: 150,
                 ),
               ),
               const SizedBox(height: 20),
-              // Title
               const Text(
                 'Medical Services',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 50),
+
               // Add Medicine Button
               ElevatedButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MedicationListScreen(
-                        seniorId: seniorId, // Pass the seniorId here
-                      ),
-                    ),
-                  );
+                  _onButtonPressed(0, MedicationListScreen(seniorId: widget.seniorId));
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF308A99),
+                  backgroundColor: _selectedIndex == 0 ? Color(0xFF308A99) : const Color(0xFFFFFFFF),
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
                   ),
+                  side: BorderSide(color: _selectedIndex == 0 ? Colors.blue : const Color(0xFF308A99), width: 1.5),
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
                     'Add Medicine',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                    ),
+                    style: TextStyle(fontSize: 16, color: _selectedIndex == 0 ? Colors.white : const Color(0xFF308A99)),
                   ),
                 ),
               ),
               const SizedBox(height: 20),
+
               // Medical Consultation Button
               OutlinedButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ConsultationsScreen(
-                        seniorId: seniorId, consultationType: 'Medical',
-                      ),
-                    ),
-                  );
+                  _onButtonPressed(1, ConsultationsScreen(seniorId: widget.seniorId, consultationType: 'Medical'));
                 },
                 style: OutlinedButton.styleFrom(
+                  backgroundColor: _selectedIndex == 1 ? Color(0xFF308A99) : Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
                   ),
-                  side: const BorderSide(color: Color(0xFF308A99), width: 1.5),
+                  side: BorderSide(color: _selectedIndex == 1 ? Colors.blue : const Color(0xFF308A99), width: 1.5),
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
                     'Medical Consultation',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Color(0xFF308A99),
-                    ),
+                    style: TextStyle(fontSize: 16, color: _selectedIndex == 1 ? Colors.white : const Color(0xFF308A99)),
                   ),
                 ),
               ),
               const SizedBox(height: 20),
+
               // Choose Medical Consultant Button
               OutlinedButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => MedicalServiceProviderScreen(
-                        seniorId: seniorId,
-                      ),
-                    ),
-                  );
+                  _onButtonPressed(2, MedicalServiceProviderScreen(seniorId: widget.seniorId));
                 },
                 style: OutlinedButton.styleFrom(
+                  backgroundColor: _selectedIndex == 2 ? Color(0xFF308A99) : Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(25),
                   ),
-                  side: const BorderSide(color: Color(0xFF308A99), width: 1.5),
+                  side: BorderSide(color: _selectedIndex == 2 ? Colors.blue : const Color(0xFF308A99), width: 1.5),
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
                     'Choose your medical consultant',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Color(0xFF308A99),
-                    ),
+                    style: TextStyle(fontSize: 16, color: _selectedIndex == 2 ? Colors.white : const Color(0xFF308A99)),
                   ),
                 ),
               ),

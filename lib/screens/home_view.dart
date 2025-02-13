@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:test1/screens/technical_support.dart';
 import 'AddMedicalInfoScreen.dart';
 import 'DocumentManagementScreen.dart';
 import 'MedicationListScreen.dart';
@@ -26,6 +27,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _fetchUserDetails(); // Fetch the user's details when the screen loads
   }
+
   void navigateToMedicalServices(String seniorId) async {
     final doc = await FirebaseFirestore.instance
         .collection('Medical_data')
@@ -37,7 +39,9 @@ class _HomePageState extends State<HomePage> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => MedicalServicesMenuScreen(seniorId: widget.senior_id,),
+          builder: (context) => MedicalServicesMenuScreen(
+            seniorId: widget.senior_id,
+          ),
         ),
       );
     } else {
@@ -50,6 +54,7 @@ class _HomePageState extends State<HomePage> {
       );
     }
   }
+
   Future<void> _fetchUserDetails() async {
     try {
       final userDoc = await FirebaseFirestore.instance
@@ -60,7 +65,8 @@ class _HomePageState extends State<HomePage> {
       if (userDoc.exists) {
         final userData = userDoc.data();
         setState(() {
-          userName = userData?['fullName'] ?? 'Unknown'; // Fetch the user's name
+          userName =
+              userData?['fullName'] ?? 'Unknown'; // Fetch the user's name
           isLoading = false; // Stop loading spinner
         });
       } else {
@@ -81,138 +87,174 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: isLoading
-          ? const Center(child: CircularProgressIndicator()) // Show loading spinner
+          ? const Center(
+              child: CircularProgressIndicator()) // Show loading spinner
           : SingleChildScrollView(
-        child: Column(
-          children: [
-            // Top Section with User Info
-            Container(
-              padding:
-              const EdgeInsets.only(top: 80.0, left: 16, right: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
                 children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        backgroundColor: Colors.grey.shade300,
-                        child: const Icon(Icons.person, color: Colors.black),
-                      ),
-                      const SizedBox(width: 12),
-                      GestureDetector(
-                        onTap: () {
-                          // Navigate to the user's profile screen
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => SeniorDashboardScreen(seniorId: widget.senior_id), // Replace `UserProfileScreen` with the actual screen you want to navigate to
-                            ),
-                          );
-                        },
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  // Top Section with User Info
+                  Container(
+                    padding:
+                        const EdgeInsets.only(top: 80.0, left: 16, right: 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
                           children: [
-                            Text(
-                              userName, // Display the fetched user name
-                              style: const TextStyle(
-                                color: Colors.black,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                            CircleAvatar(
+                              backgroundColor: Colors.grey.shade300,
+                              child:
+                                  const Icon(Icons.person, color: Colors.black),
+                            ),
+                            const SizedBox(width: 12),
+                            GestureDetector(
+                              onTap: () {
+                                // Navigate to the user's profile screen
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => SeniorDashboardScreen(
+                                        seniorId: widget
+                                            .senior_id), // Replace `UserProfileScreen` with the actual screen you want to navigate to
+                                  ),
+                                );
+                              },
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    userName, // Display the fetched user name
+                                    style: const TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
 
-                  // Actions
-                  const Row(
-                    children: [
-                      Icon(Icons.notifications_none,
-                          color: Colors.black),
-                      SizedBox(width: 16),
-                      Icon(Icons.menu, color: Colors.black),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16), // Add space after top section
-
-            // Header Image
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: Image.asset(
-                  'assets/images/home_image.png',
-                  height: 150,
-                  width: double.infinity,
-                  fit: BoxFit.cover,
-                ),
-              ),
-            ),
-
-            // Services Grid
-            Padding(
-              padding: const EdgeInsets.only(top: 30.0,left: 16,right: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Our services',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  GridView(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      childAspectRatio: 0.9,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
+                        // Actions
+                        const Row(
+                          children: [
+                            Icon(Icons.notifications_none, color: Colors.black),
+                            SizedBox(width: 16),
+                            Icon(Icons.menu, color: Colors.black),
+                          ],
+                        ),
+                      ],
                     ),
+                  ),
+                  const SizedBox(height: 16), // Add space after top section
 
-                    children: [
-                      _buildServiceCard('Medical Services', 'assets/images/medical_services.png', () => navigateToMedicalServices(widget.senior_id),),
-                      _buildServiceCard('Social Activities', 'assets/images/social_activities.png',   () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SocialActivitiesListScreen(
-                            seniorId: widget.senior_id, // Pass the correct senior ID
-                          ),
+                  // Header Image
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        'assets/images/home_image.png',
+                        height: 150,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+
+                  // Services Grid
+                  Padding(
+                    padding:
+                        const EdgeInsets.only(top: 30.0, left: 16, right: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Our services',
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
                         ),
-                      ),
-                      ),
-                      _buildServiceCard('Document Management', 'assets/images/document_management.png', () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DocumentManagementScreen(
-                            seniorId: widget.senior_id, // Pass the correct senior ID
+                        GridView(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 3,
+                            childAspectRatio: 0.9,
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
                           ),
+                          children: [
+                            _buildServiceCard(
+                              'Medical Services',
+                              'assets/images/medical.png',
+                              () => navigateToMedicalServices(widget.senior_id),
+                            ),
+                            _buildServiceCard(
+                              'Social Activities',
+                              'assets/images/social_activities.png',
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      SocialActivitiesListScreen(
+                                    seniorId: widget
+                                        .senior_id, // Pass the correct senior ID
+                                  ),
+                                ),
+                              ),
+                            ),
+                            _buildServiceCard(
+                              'Document Management',
+                              'assets/images/document_management.png',
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      DocumentManagementScreen(
+                                    seniorId: widget
+                                        .senior_id, // Pass the correct senior ID
+                                  ),
+                                ),
+                              ),
+                            ), //B
+                            _buildServiceCard(
+                              'Bill Payment',
+                              'assets/images/bill_payment.png',
+                              () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => BillPaymentScreen(
+                                    seniorId: widget
+                                        .senior_id, // Pass the correct senior ID
+                                  ),
+                                ),
+                              ),
+                            ),
+                            _buildServiceCard('Technical Support',
+                                'assets/images/technical_support.png', () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => TechnicalSupportScreen(),
+                                    ),
+                                  );
+                                }),
+                            _buildServiceCard(
+                                'Legal and Financial Advice',
+                                'assets/images/legal_and_financial_advice.png',
+                                () {}),
+                            _buildServiceCard('Emergency Services',
+                                'assets/images/emergency services.png', () {}),
+                          ],
                         ),
-                      ),),//B
-                      _buildServiceCard('Bill Payment', 'assets/images/bill_payment.png', () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => BillPaymentScreen(
-                            seniorId: widget.senior_id, // Pass the correct senior ID
-                          ),
-                        ),
-                      ),
-                      ),
-                      _buildServiceCard('Technical Support', 'assets/images/technical_support.png', () {}),
-                      _buildServiceCard('Legal and Financial Advice', 'assets/images/legal_and_financial_advice.png', () {}),
-                      _buildServiceCard('Emergency Services', 'assets/images/emergency services.png', () {}),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -220,7 +262,8 @@ class _HomePageState extends State<HomePage> {
     return GestureDetector(
       onTap: onTap,
       child: Column(
-        mainAxisSize: MainAxisSize.min, // Ensure the column doesn't expand unnecessarily
+        mainAxisSize: MainAxisSize.min,
+        // Ensure the column doesn't expand unnecessarily
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Material(

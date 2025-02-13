@@ -185,7 +185,7 @@ class _SeniorDashboardScreenState extends State<SeniorDashboardScreen> {
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) =>
-                                              LoginScreen(userType: 'elderly'),
+                                              LoginScreen(role: 'elderly'),
                                         ),
                                       );
                                     },

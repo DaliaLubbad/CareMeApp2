@@ -4,14 +4,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:test1/screens/register_admin_screen.dart';
 import 'package:test1/screens/register_eldery_screen.dart';
 import '../models/custom_text_field.dart';
-import 'ServiceProviderDashboard.dart';
 import 'home_view.dart';
 import 'account_type_screen.dart';
 
 class LoginScreen extends StatefulWidget {
-  final String userType; // Role passed from AccountTypeScreen
+  final String role; // Role passed from AccountTypeScreen
 
-  const LoginScreen({Key? key, required this.userType}) : super(key: key);
+  const LoginScreen({Key? key, required this.role}) : super(key: key);
 
   @override
   _LoginScreenState createState() => _LoginScreenState();
@@ -38,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // Determine which collection to query based on the role
       final String collectionName =
-      widget.userType == 'elderly' ? 'seniors' : 'other_users';
+      widget.role == 'elderly' ? 'seniors' : 'other_users';
 
       // Fetch the user document from the appropriate collection
       final DocumentSnapshot userDoc = await FirebaseFirestore.instance
@@ -51,20 +50,15 @@ class _LoginScreenState extends State<LoginScreen> {
         final userData = userDoc.data() as Map<String, dynamic>;
 
         // Navigate based on role
-        if (widget.userType == 'elderly' && collectionName == 'seniors') {
+        if (widget.role == 'elderly' && collectionName == 'seniors') {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder: (context) => HomePage(senior_id: userId), // Pass senior ID
             ),
           );
-        } else if (widget.userType == 'service_provider' && collectionName == 'other_users') {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ServiceProviderDashboard (userId: userId), // Pass senior ID
-            ),
-          );
+        } else if (widget.role == 'service_provider' && collectionName == 'other_users') {
+          // TODO: Navigate to the service provider's screen
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Service provider functionality not implemented yet.')),
           );
@@ -96,12 +90,12 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
   void navigateToSignUpScreen() {
-    if (widget.userType == 'elderly') {
+    if (widget.role == 'elderly') {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => RegisterScreenEldery()),
       );
-    } else if (widget.userType == 'service_provider') {
+    } else if (widget.role == 'service_provider') {
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => RegisterScreenAdmin()),
@@ -149,7 +143,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 isPassword: true,
                 controller: _passwordController,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 60),
               SizedBox(
                 width: double.infinity,
                 height: 50,
@@ -178,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   TextButton(
                     onPressed:
-                      navigateToSignUpScreen,
+                    navigateToSignUpScreen,
 
                     child: const Text(
                       "Sign Up",
