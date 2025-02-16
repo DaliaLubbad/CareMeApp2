@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
+import 'AddBankCardScreen.dart';
+import 'AddElectronicWalletScreen.dart';
 import 'AppointmentCalendarScreen.dart';
+import 'ChangePasswordScreen.dart';
 import 'MedicalInfoScreen.dart';
 import 'login_screen.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SeniorDashboardScreen extends StatefulWidget {
   final String seniorId;
@@ -21,16 +25,12 @@ class _SeniorDashboardScreenState extends State<SeniorDashboardScreen> {
   @override
   void initState() {
     super.initState();
-    _fetchSeniorName(); // Fetch the senior's name when the screen loads
+    _fetchSeniorName();
   }
 
   Future<void> _fetchSeniorName() async {
     try {
-      final doc = await FirebaseFirestore.instance
-          .collection('seniors')
-          .doc(widget.seniorId)
-          .get();
-
+      final doc = await FirebaseFirestore.instance.collection('seniors').doc(widget.seniorId).get();
       if (doc.exists) {
         setState(() {
           seniorName = doc['fullName'] ?? 'Unknown';
@@ -51,6 +51,96 @@ class _SeniorDashboardScreenState extends State<SeniorDashboardScreen> {
     }
   }
 
+  Future<void> _authenticateUser() async {
+    String password = '';
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text(
+            "Enter Your Password",
+            style: TextStyle(color: Color(0xFF308A99)), // Updated color
+          ),
+          content: TextField(
+            obscureText: true,
+            onChanged: (value) => password = value,
+            decoration: const InputDecoration(
+              labelText: "Password",
+              labelStyle: TextStyle(color: Color(0xFF308A99)), // Updated color
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Color(0xFF308A99)), // Updated color
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel", style: TextStyle(color: Colors.red)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                User? user = FirebaseAuth.instance.currentUser;
+                try {
+                  AuthCredential credential = EmailAuthProvider.credential(
+                    email: user!.email!,
+                    password: password,
+                  );
+                  await user.reauthenticateWithCredential(credential);
+                  _showPaymentOptions();
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Incorrect password. Try again!")),
+                  );
+                }
+              },
+              child: const Text(
+                "Verify",
+                style: TextStyle(color: Color(0xFF308A99)), // Updated color
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+  void _showPaymentOptions() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Select Payment Method",
+            style: TextStyle(color: Color(0xFF308A99)),
+          ),
+          content: const Text("How would you like to proceed?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => AddBankCardScreen(seniorId: widget.seniorId)),
+        ),
+              child: const Text("Bank Card",
+                style: TextStyle(color: Color(0xFF308A99)),
+              ),
+            ),
+            TextButton(
+              onPressed:  () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AddElectronicWalletScreen(seniorId: widget.seniorId)),
+              ),
+              child: const Text("Electronic Wallet",
+                style: TextStyle(color: Color(0xFF308A99)),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -68,19 +158,15 @@ class _SeniorDashboardScreenState extends State<SeniorDashboardScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              seniorName, // Display the dynamically fetched name
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
+              seniorName,
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             const SizedBox(height: 10),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: const [
-                _ProfileStat(label: "Heart rate", value: "55"),
-                _ProfileStat(label: "Calories", value: "55"),
+                _ProfileStat(label: "Heart rate", value: "60"),
+                _ProfileStat(label: "Steps", value: "10000"),
                 _ProfileStat(label: "Weight", value: "55"),
               ],
             ),
@@ -94,120 +180,50 @@ class _SeniorDashboardScreenState extends State<SeniorDashboardScreen> {
                 child: ListView(
                   padding: const EdgeInsets.all(20),
                   children: [
-                    _ProfileOption(
-                      icon: Icons.favorite,
-                      label: "My Saved",
-                      onTap: () {}, // Add your navigation
-                    ),
-                    _ProfileOption(
-                      icon: Icons.calendar_today,
-                      label: "Appointment",
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                AppointmentCalendarScreen(seniorId: widget.seniorId),
-                          ),
-                        );
-                      },
-                    ),
-                    _ProfileOption(
-                      icon: Icons.payment,
-                      label: "Payment Method",
-                      onTap: () {}, // Add your navigation
-                    ),
-                    _ProfileOption(
-                      icon: Icons.question_answer,
-                      label: "FAQs",
-                      onTap: () {}, // Add your navigation
-                    ),
-                    _ProfileOption(
-                      icon: Icons.medical_services,
-                      label: "Medical Information",
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) =>
-                                MedicalInfoScreen(seniorId: widget.seniorId),
-                          ),
-                        );
-                      },
-                    ),
-                    _ProfileOption(
-                      icon: Icons.logout,
-                      label: "Logout",
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (BuildContext context) {
-                            return AlertDialog(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
+                    _ProfileOption(icon: Icons.favorite, label: "My Saved", onTap: () {}),
+                    _ProfileOption(icon: Icons.calendar_today, label: "Appointment", onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => AppointmentCalendarScreen(seniorId: widget.seniorId)),
+                      );
+                    }),
+                    _ProfileOption(icon: Icons.payment, label: "Payment Method", onTap: _authenticateUser),
+                    _ProfileOption(icon: Icons.password, label: "Change Password", onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => ChangePasswordScreen()),
+                      );
+                    }),
+                    _ProfileOption(icon: Icons.medical_services, label: "Medical Information", onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => MedicalInfoScreen(seniorId: widget.seniorId)),
+                      );
+                    }),
+                    _ProfileOption(icon: Icons.logout, label: "Logout", onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            title: const Text("Logout"),
+                            content: const Text("Are you sure you want to log out?"),
+                            actions: [
+                              TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(builder: (context) => LoginScreen(userType: 'elderly')),
+                                  );
+                                },
+                                child: const Text("Log Out", style: TextStyle(color: Colors.red)),
                               ),
-                              title: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(Icons.logout,
-                                      size: 40, color: const Color(0xFF308A99)),
-                                  const SizedBox(height: 10),
-                                  const Text(
-                                    "Are you sure to log out of your account?",
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                        fontSize: 16, fontWeight: FontWeight.w500),
-                                  ),
-                                ],
-                              ),
-                              content: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      Navigator.pop(context); // Close the dialog
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.grey[300],
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                    child: const Text(
-                                      "Cancel",
-                                      style: TextStyle(color: Colors.black),
-                                    ),
-                                  ),
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      Navigator.pop(context); // Close the dialog
-                                      Navigator.pushReplacement(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              LoginScreen(userType: 'elderly'),
-                                        ),
-                                      );
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF308A99),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10),
-                                      ),
-                                    ),
-                                    child: const Text(
-                                      "Log Out",
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          },
-                        );
-                      },
-                      isLogout: true,
-                    ),
+                            ],
+                          );
+                        },
+                      );
+                    }, isLogout: true),
                   ],
                 ),
               ),

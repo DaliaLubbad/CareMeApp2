@@ -12,9 +12,7 @@ class MyRequestsScreen extends StatefulWidget {
 
 class _MyRequestsScreenState extends State<MyRequestsScreen> {
   List<Map<String, dynamic>> requestsList = [];
-  List<Map<String, dynamic>> filteredRequests = [];
   bool isLoading = true;
-  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -49,7 +47,6 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
 
       setState(() {
         requestsList = fetchedRequests;
-        filteredRequests = fetchedRequests;
         isLoading = false;
       });
     } catch (e) {
@@ -80,16 +77,6 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
     }
   }
 
-  void _filterRequests(String query) {
-    setState(() {
-      filteredRequests = requestsList
-          .where((request) => request['senior_name']
-          .toLowerCase()
-          .contains(query.toLowerCase()))
-          .toList();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -98,67 +85,43 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
         backgroundColor: const Color(0xff308A99),
         foregroundColor: Colors.white,
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _filterRequests,
-              decoration: InputDecoration(
-                labelText: "Search",
-                labelStyle: const TextStyle(color: Color(0xff308A99)),
-                prefixIcon: const Icon(Icons.search, color: Color(0xff308A99)),
-                filled: true,
-                fillColor: Colors.grey[200],
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                  borderSide: BorderSide.none,
-                ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : requestsList.isEmpty
+          ? const Center(child: Text("No new requests."))
+          : ListView.builder(
+        itemCount: requestsList.length,
+        itemBuilder: (context, index) {
+          final request = requestsList[index];
+          return Card(
+            margin: const EdgeInsets.symmetric(
+                vertical: 8, horizontal: 16),
+            child: ListTile(
+              title: Text(request['senior_name']),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextButton(
+                    onPressed: () =>
+                        _updateRequestStatus(request['request_id'], "accepted"),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.green,
+                    ),
+                    child: const Text("Accept"),
+                  ),
+                  TextButton(
+                    onPressed: () =>
+                        _updateRequestStatus(request['request_id'], "rejected"),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.red,
+                    ),
+                    child: const Text("Reject"),
+                  ),
+                ],
               ),
             ),
-          ),
-          Expanded(
-            child: isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : filteredRequests.isEmpty
-                ? const Center(child: Text("No new requests."))
-                : ListView.builder(
-              itemCount: filteredRequests.length,
-              itemBuilder: (context, index) {
-                final request = filteredRequests[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(
-                      vertical: 8, horizontal: 16),
-                  child: ListTile(
-                    title: Text(request['senior_name']),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TextButton(
-                          onPressed: () =>
-                              _updateRequestStatus(request['request_id'], "accepted"),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.green,
-                          ),
-                          child: const Text("Accept"),
-                        ),
-                        TextButton(
-                          onPressed: () =>
-                              _updateRequestStatus(request['request_id'], "rejected"),
-                          style: TextButton.styleFrom(
-                            foregroundColor: Colors.red,
-                          ),
-                          child: const Text("Reject"),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

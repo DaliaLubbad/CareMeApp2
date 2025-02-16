@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'MedicalProviderProfileScreen.dart';
+import 'ServiceProviderProfileScreen.dart';
 
 class MedicalServiceProviderScreen extends StatefulWidget {
   final String seniorId; // Senior ID to link the booking.
@@ -215,7 +215,7 @@ class _MedicalServiceProviderScreenState extends State<MedicalServiceProviderScr
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => MedicalProviderProfileScreen(provider: provider),
+                                    builder: (context) =>ServiceProviderProfileScreen(userId: provider['user_id'],isReadOnly: true,),
                                   ),
                                 );
                               },

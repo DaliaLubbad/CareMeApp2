@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'AddConsultationScreen.dart';
+import 'MyConsultationsScreen.dart';
 import 'MyRequestsScreen.dart';
 import 'MySeniorsScreen.dart';
 import 'ServiceProviderProfileScreen.dart';
@@ -79,11 +81,10 @@ class _ServiceProviderDashboardState extends State<ServiceProviderDashboard> {
               child: Row(
                 children: [
                   CircleAvatar(
-                    backgroundImage: profileImage.startsWith("http")
-                        ? NetworkImage(profileImage) // Load from URL if available
-                        : AssetImage(profileImage) as ImageProvider,
+                    backgroundColor: Colors.grey.shade300,
+                    child: const Icon(Icons.person, color: Colors.black),
                   ),
-                  const SizedBox(width: 10),
+                  SizedBox(width: 10),
                   Text(
                     userName,
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black),
@@ -125,8 +126,8 @@ class _ServiceProviderDashboardState extends State<ServiceProviderDashboard> {
             _buildOutlinedButton("My Consultation",  () => Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => MyRequestsScreen(
-                  userId: widget.userId, // Pass the correct senior ID
+                builder: (context) => MyConsultationsScreen(
+
                 ),
               ),
             ),),

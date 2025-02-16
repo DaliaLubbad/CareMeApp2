@@ -1,7 +1,7 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:file_picker/file_picker.dart';
 
@@ -9,11 +9,13 @@ class AddConsultationScreen extends StatefulWidget {
   final String seniorId;
   final String consultationType;
   final QueryDocumentSnapshot? existingConsultation;
+  final bool isServiceProvider; // Determines if it's a service provider
 
   AddConsultationScreen({
     required this.seniorId,
     required this.consultationType,
     this.existingConsultation,
+    required this.isServiceProvider,
   });
 
   @override
@@ -23,16 +25,81 @@ class AddConsultationScreen extends StatefulWidget {
 class _AddConsultationScreenState extends State<AddConsultationScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _detailsController = TextEditingController();
+  final TextEditingController _replyController = TextEditingController();
   String? attachedFileUrl;
+  User? currentUser = FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
     super.initState();
     if (widget.existingConsultation != null) {
-      _titleController.text = widget.existingConsultation!['title'] ?? '';
-      _detailsController.text = widget.existingConsultation!['details'] ?? '';
-      attachedFileUrl = widget.existingConsultation!['attached_document'] ?? '';
+      var consultationData = widget.existingConsultation!.data() as Map<String, dynamic>?;
+
+      _titleController.text = consultationData?['title'] ?? '';
+      _detailsController.text = consultationData?['details'] ?? '';
+      attachedFileUrl = consultationData?['attached_document'] ?? '';
+      _replyController.text = consultationData?['consultation_reply'] ?? '';
     }
+  }
+
+  Future<void> _submitReply() async {
+    if (!widget.isServiceProvider) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Only consultants can reply to this consultation.")),
+      );
+      return;
+    }
+    if (_replyController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Reply cannot be empty")),
+      );
+      return;
+    }
+    try {
+      await FirebaseFirestore.instance
+          .collection('consultations')
+          .doc(widget.existingConsultation!.id)
+          .update({
+        'consultation_reply': _replyController.text,
+        'updated_at': Timestamp.now(),
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Reply submitted successfully")),
+      );
+      setState(() {});
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
+
+  Widget _buildReplySection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text("Consultant's Reply", style: TextStyle(color: Color(0xFF308A99), fontSize: 16)),
+        const SizedBox(height: 5),
+        TextField(
+          controller: _replyController,
+          readOnly: !widget.isServiceProvider,
+          maxLines: 4,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.grey[200],
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide(color: Color(0xFF308A99), width: 2.0),
+            ),
+          ),
+        ),
+      ],
+    );
+
   }
 
   Future<void> _attachDocument() async {
@@ -54,13 +121,28 @@ class _AddConsultationScreenState extends State<AddConsultationScreen> {
   Future<void> _saveOrUpdateConsultation() async {
     if (_titleController.text.isEmpty || _detailsController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("All fields are required")),
+        const SnackBar(content: Text("Title and details are required")),
       );
       return;
     }
 
     try {
-      if (widget.existingConsultation != null) {
+      if (widget.existingConsultation == null) {
+        // Save New Consultation
+        await FirebaseFirestore.instance.collection('consultations').add({
+          'senior_id': widget.seniorId,
+          'consultation_type': widget.consultationType,
+          'title': _titleController.text,
+          'details': _detailsController.text,
+          'attached_document': attachedFileUrl ?? '',
+          'created_at': Timestamp.now(),
+          'updated_at': Timestamp.now(),
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Consultation saved successfully")),
+        );
+      } else {
+        // Update Existing Consultation
         await FirebaseFirestore.instance
             .collection('consultations')
             .doc(widget.existingConsultation!.id)
@@ -73,21 +155,7 @@ class _AddConsultationScreenState extends State<AddConsultationScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Consultation updated successfully")),
         );
-      } else {
-        await FirebaseFirestore.instance.collection('consultations').add({
-          'senior_id': widget.seniorId,
-          'consultation_type': widget.consultationType,
-          'title': _titleController.text,
-          'details': _detailsController.text,
-          'attached_document': attachedFileUrl ?? '',
-          'created_at': Timestamp.now(),
-          'status': 'Pending',
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Consultation saved successfully")),
-        );
       }
-
       Navigator.pop(context);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -117,9 +185,10 @@ class _AddConsultationScreenState extends State<AddConsultationScreen> {
             children: [
               TextField(
                 controller: _titleController,
+                readOnly: widget.isServiceProvider,
                 decoration: InputDecoration(
                   labelText: "Title",
-                  labelStyle: const TextStyle(color: Color(0xFF308A99)),
+                  labelStyle: TextStyle(color: Color(0xFF308A99)), // App color
                   filled: true,
                   fillColor: Colors.grey[200],
                   border: OutlineInputBorder(
@@ -128,18 +197,18 @@ class _AddConsultationScreenState extends State<AddConsultationScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFF308A99), width: 2.0),
+                    borderSide: BorderSide(color: Color(0xFF308A99), width: 2.0), // Focus color
                   ),
                 ),
-                cursorColor: const Color(0xFF308A99),
               ),
+
               const SizedBox(height: 16),
               TextField(
-                controller: _detailsController,
-                maxLines: 5,
+                controller: _titleController,
+                readOnly: widget.isServiceProvider,
                 decoration: InputDecoration(
                   labelText: "Details",
-                  labelStyle: const TextStyle(color: Color(0xFF308A99)),
+                  labelStyle: TextStyle(color: Color(0xFF308A99)), // App color
                   filled: true,
                   fillColor: Colors.grey[200],
                   border: OutlineInputBorder(
@@ -148,41 +217,34 @@ class _AddConsultationScreenState extends State<AddConsultationScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Color(0xFF308A99), width: 2.0),
+                    borderSide: BorderSide(color: Color(0xFF308A99), width: 2.0), // Focus color
                   ),
                 ),
-                cursorColor: const Color(0xFF308A99),
               ),
+
               const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _attachDocument,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF308A99),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              if (!widget.isServiceProvider)
+                ElevatedButton(
+                  onPressed: _attachDocument,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Color(0xFF308A99)),
+                  child: const Text("Attach Document",
+                      style: TextStyle(color: Colors.white)
                   ),
                 ),
-                child: const Text("Attach Document", style: TextStyle(color: Colors.white)),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 60,
-                child: OutlinedButton(
-                  onPressed: _saveOrUpdateConsultation,
-                  style: OutlinedButton.styleFrom(
-                    backgroundColor: const Color(0xFF308A99),
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                  ),
-                  child: Text(
-                    widget.existingConsultation == null ? "Save Consultation" : "Update Consultation",
-                    style: const TextStyle(color: Colors.white, fontSize: 18),
+              const SizedBox(height: 16),
+              if (!widget.isServiceProvider)
+                SizedBox(
+                    width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Color(0xFF308A99)),
+                    onPressed: _saveOrUpdateConsultation,
+                    child: Text(widget.existingConsultation == null ? "Save Consultation" : "Update Consultation", style: TextStyle(color: Colors.white)),
                   ),
                 ),
-              ),
+              const SizedBox(height: 16),
+              _buildReplySection(),
             ],
           ),
         ),

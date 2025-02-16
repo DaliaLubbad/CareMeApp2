@@ -25,10 +25,10 @@ class _RegisterScreenAdminState extends State<RegisterScreenAdmin> {
   String? _selectedRole; // Selected role
 
   final List<String> _roles = [
-    'medical',
-    'financial',
-    'legal',
-    'family member'
+    'Medical',
+    'Financial',
+    'Legal',
+    'Family member'
   ]; // Enum values
 
   Future<void> _register() async {

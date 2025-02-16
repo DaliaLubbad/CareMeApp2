@@ -30,7 +30,7 @@ class _ConsultationsScreenState extends State<ConsultationsScreen> {
         builder: (context) => AddConsultationScreen(
           seniorId: widget.seniorId,
           consultationType: widget.consultationType,
-          existingConsultation: consultation, // Pass existing consultation data
+          existingConsultation: consultation, isServiceProvider: false, // Pass existing consultation data
         ),
       ),
     );
@@ -107,12 +107,15 @@ class _ConsultationsScreenState extends State<ConsultationsScreen> {
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
-              stream: _firestore
-                  .collection('consultations')
-                  .where('senior_id', isEqualTo: widget.seniorId)
-                  .where('consultation_type', isEqualTo: widget.consultationType)
+          stream: _firestore
+              .collection('consultations')
+              .where('senior_id', isEqualTo: widget.seniorId)
+              .where('consultation_type', isEqualTo: widget.consultationType)
+              .orderBy('updated_at', descending: true) // 🔹 Sorting applied
 
-                  .snapshots(),
+
+
+              .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
@@ -177,7 +180,8 @@ class _ConsultationsScreenState extends State<ConsultationsScreen> {
           MaterialPageRoute(
             builder: (context) => AddConsultationScreen(
               seniorId: widget.seniorId,
-              consultationType: widget.consultationType,
+              consultationType: widget.consultationType, isServiceProvider: false,
+
             ),
           ),
         ),

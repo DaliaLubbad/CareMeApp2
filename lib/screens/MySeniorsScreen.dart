@@ -12,7 +12,9 @@ class MySeniorsScreen extends StatefulWidget {
 
 class _MySeniorsScreenState extends State<MySeniorsScreen> {
   List<Map<String, dynamic>> seniorsList = [];
+  List<Map<String, dynamic>> filteredSeniors = [];
   bool isLoading = true;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -46,10 +48,9 @@ class _MySeniorsScreenState extends State<MySeniorsScreen> {
 
       setState(() {
         seniorsList = fetchedSeniors;
+        filteredSeniors = fetchedSeniors;
         isLoading = false;
       });
-
-      print("Fetched Seniors: $seniorsList"); // Debugging log
     } catch (e) {
       setState(() {
         isLoading = false;
@@ -58,6 +59,16 @@ class _MySeniorsScreenState extends State<MySeniorsScreen> {
         SnackBar(content: Text("Error loading seniors: $e")),
       );
     }
+  }
+
+  void _filterSeniors(String query) {
+    setState(() {
+      filteredSeniors = seniorsList
+          .where((senior) => senior['senior_name']
+          .toLowerCase()
+          .contains(query.toLowerCase()))
+          .toList();
+    });
   }
 
   void _navigateToSeniorProfile(String seniorId) {
@@ -75,20 +86,44 @@ class _MySeniorsScreenState extends State<MySeniorsScreen> {
         backgroundColor: const Color(0xff308A99),
         foregroundColor: Colors.white,
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : seniorsList.isEmpty
-          ? const Center(child: Text("No seniors assigned yet."))
-          : ListView.builder(
-        itemCount: seniorsList.length,
-        itemBuilder: (context, index) {
-          final senior = seniorsList[index];
-          return ListTile(
-            title: Text(senior['senior_name']),
-            trailing: const Icon(Icons.arrow_forward_ios, color: Colors.grey),
-            onTap: () => _navigateToSeniorProfile(senior['senior_id']),
-          );
-        },
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _filterSeniors,
+              decoration: InputDecoration(
+                labelText: "Search",
+                labelStyle: const TextStyle(color: Color(0xff308A99)),
+                prefixIcon: const Icon(Icons.search, color: Color(0xff308A99)),
+                filled: true,
+                fillColor: Colors.grey[200],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : filteredSeniors.isEmpty
+                ? const Center(child: Text("No seniors assigned yet."))
+                : ListView.builder(
+              itemCount: filteredSeniors.length,
+              itemBuilder: (context, index) {
+                final senior = filteredSeniors[index];
+                return ListTile(
+                  title: Text(senior['senior_name']),
+                  trailing: const Icon(Icons.arrow_forward_ios, color: Colors.grey),
+                  onTap: () => _navigateToSeniorProfile(senior['senior_id']),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
