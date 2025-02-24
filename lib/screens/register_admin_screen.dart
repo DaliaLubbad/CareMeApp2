@@ -19,6 +19,7 @@ class _RegisterScreenAdminState extends State<RegisterScreenAdmin> {
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _countryController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
@@ -26,8 +27,7 @@ class _RegisterScreenAdminState extends State<RegisterScreenAdmin> {
 
   final List<String> _roles = [
     'Medical',
-    'Financial',
-    'Legal',
+    'Legal & Financial',
     'Family member'
   ]; // Enum values
 
@@ -52,9 +52,10 @@ class _RegisterScreenAdminState extends State<RegisterScreenAdmin> {
         'fullName': _fullNameController.text.trim(),
         'phone': _phoneController.text.trim(),
         'email': _emailController.text.trim(),
+        'country': _countryController.text.trim(),
         'description': _descriptionController.text.trim(),
         'role': _selectedRole, // Save selected role
-        'createdAt': Timestamp.now(),
+
       });
 
       // Show Success Dialog
@@ -86,7 +87,7 @@ class _RegisterScreenAdminState extends State<RegisterScreenAdmin> {
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (context) => LoginScreen(userType: 'admin',)),
+                    MaterialPageRoute(builder: (context) => LoginScreen(userType: 'service_provider',)),
                   );
                 },
                 style: ElevatedButton.styleFrom(
@@ -142,6 +143,9 @@ class _RegisterScreenAdminState extends State<RegisterScreenAdmin> {
 
               const _FieldLabel(label: 'E-mail'),
               CustomTextField(controller: _emailController, hintText: 'Enter your E-mail', icon: Icons.email),
+              const _FieldLabel(label: 'Country'),
+              CustomTextField(controller: _countryController, hintText: 'Enter your Country', icon: Icons.public),
+
 
               const SizedBox(height: 20.0),
 

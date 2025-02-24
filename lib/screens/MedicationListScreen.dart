@@ -4,12 +4,14 @@ import 'Add_medication_screen.dart';
 
 class MedicationListScreen extends StatefulWidget {
   final String seniorId;
+  final bool isSenior;  // New parameter
 
-  MedicationListScreen({required this.seniorId});
+  MedicationListScreen({required this.seniorId, required this.isSenior});
 
   @override
   _MedicationListScreenState createState() => _MedicationListScreenState();
 }
+
 
 class _MedicationListScreenState extends State<MedicationListScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -100,34 +102,37 @@ class _MedicationListScreenState extends State<MedicationListScreen> {
                   ),
                 ),
                 SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => AddMedicationScreen(
-                        seniorId: widget.seniorId, // Use passed seniorId
-                        medication: null,
+                if (widget.isSenior)
+                  ElevatedButton(
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => AddMedicationScreen(
+                          seniorId: widget.seniorId,
+                          medication: null,
+                        ),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: const Text(
+                        "Add Medicine",
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF308A99),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
                       ),
                     ),
                   ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                    child: const Text(
-                      "Add Medicine",
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF308A99),
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                  ),
-                ),
+
+
               ],
             ),
           ),

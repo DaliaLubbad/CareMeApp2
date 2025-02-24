@@ -21,6 +21,8 @@ class _AddBillScreenState extends State<AddBillScreen> {
   final TextEditingController _amountController = TextEditingController();
   String _selectedPaymentMethod = 'Bank Card'; // Default value
   DateTime? _dueDate;
+  String _billStatus = "Unpaid"; // Default value
+
 
   final List<String> _paymentMethods = [
     'Bank Card',
@@ -35,13 +37,18 @@ class _AddBillScreenState extends State<AddBillScreen> {
       _amountController.text = widget.bill!['amount_due'].toString();
       _selectedPaymentMethod = widget.bill!['payment_method'] ?? 'Bank Card';
       _dueDate = (widget.bill!['due_date'] as Timestamp).toDate();
+      _billStatus = widget.bill?['status'] ?? "Unpaid";
+
     }
   }
 
   Future<void> _selectDate() async {
     final pickedDate = await showDatePicker(
       context: context,
-      initialDate: _dueDate ?? DateTime.now(),
+      initialDate: (_dueDate != null && _dueDate!.isAfter(DateTime.now()))
+          ? _dueDate!
+          : DateTime.now(),
+
       firstDate: DateTime.now(),
       lastDate: DateTime(2100),
       builder: (context, child) {
@@ -79,6 +86,7 @@ class _AddBillScreenState extends State<AddBillScreen> {
       'due_date': Timestamp.fromDate(_dueDate!),
       'amount_due': double.tryParse(_amountController.text) ?? 0.0,
       'payment_method': _selectedPaymentMethod,
+      'status': _billStatus, // Add this
     };
 
     if (widget.bill == null) {
@@ -133,7 +141,7 @@ class _AddBillScreenState extends State<AddBillScreen> {
               controller: _amountController,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                labelText: "Amount",
+                labelText: "Amount",labelStyle: TextStyle(color: Color(0xFF308A99)),
                 filled: true,
                 fillColor: Colors.grey[200],
                 border: OutlineInputBorder(
@@ -159,7 +167,7 @@ class _AddBillScreenState extends State<AddBillScreen> {
                 });
               },
               decoration: InputDecoration(
-                labelText: "Payment Method",
+                labelText: "Payment Method",labelStyle: TextStyle(color: Color(0xFF308A99)),
                 filled: true,
                 fillColor: Colors.grey[200],
                 border: OutlineInputBorder(
@@ -168,8 +176,33 @@ class _AddBillScreenState extends State<AddBillScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
 
+            // Payment Method Dropdown
+            DropdownButtonFormField<String>(
+              value: _billStatus,
+              items: ["Paid", "Unpaid"].map((String status) {
+                return DropdownMenuItem<String>(
+                  value: status,
+                  child: Text(status),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _billStatus = value!;
+                });
+              },
+              decoration: InputDecoration(
+                labelText: "Bill Status",labelStyle: TextStyle(color: Color(0xFF308A99)),
+                filled: true,
+                fillColor: Colors.grey[200],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             // Save Button
             SizedBox(
               width: double.infinity,

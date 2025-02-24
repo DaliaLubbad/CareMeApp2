@@ -41,9 +41,12 @@ class _ServiceProviderDashboardState extends State<ServiceProviderDashboard> {
           // Determine which role-based image to use
           if (userRole.toLowerCase() == "medical") {
             roleBasedImage = "assets/images/medical.jpeg"; // Medical role icon
-          } else if (userRole.toLowerCase() == "legal") {
+          } else if (userRole.toLowerCase() == "legal & financial") {
             roleBasedImage = "assets/images/legal.jpeg"; // Legal role icon
-          } else {
+          }
+          else if (userRole.toLowerCase() == "family member") {
+            roleBasedImage = "assets/images/family.jpg";}
+          else {
             roleBasedImage = "assets/default_role.png"; // Fallback icon
           }
         });
@@ -59,7 +62,7 @@ class _ServiceProviderDashboardState extends State<ServiceProviderDashboard> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ServiceProviderProfileScreen(userId: widget.userId),
+        builder: (context) => ServiceProviderProfileScreen(userId: widget.userId, isReadOnly: false,),
       ),
     );
   }

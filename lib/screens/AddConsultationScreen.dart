@@ -49,30 +49,35 @@ class _AddConsultationScreenState extends State<AddConsultationScreen> {
       );
       return;
     }
+
     if (_replyController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Reply cannot be empty")),
       );
       return;
     }
+
     try {
       await FirebaseFirestore.instance
           .collection('consultations')
           .doc(widget.existingConsultation!.id)
           .update({
-        'consultation_reply': _replyController.text,
-        'updated_at': Timestamp.now(),
+        'consultation_reply': _replyController.text,  // ✅ Only updating the reply
+        'updated_at': Timestamp.now(),  // ✅ Updating timestamp
       });
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Reply submitted successfully")),
+        const SnackBar(content: Text("Reply updated successfully")),
       );
-      setState(() {});
+
+      setState(() {});  // ✅ Refresh the UI after update
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
       );
     }
   }
+
 
   Widget _buildReplySection() {
     return Column(
@@ -95,6 +100,21 @@ class _AddConsultationScreenState extends State<AddConsultationScreen> {
               borderRadius: BorderRadius.circular(10),
               borderSide: BorderSide(color: Color(0xFF308A99), width: 2.0),
             ),
+          ),
+        ),
+        const SizedBox(height: 20),
+        if (widget.isServiceProvider)
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: _submitReply,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF308A99),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: const Text("Submit Reply", style: TextStyle(color: Colors.white, fontSize: 18)),
           ),
         ),
       ],
@@ -204,7 +224,7 @@ class _AddConsultationScreenState extends State<AddConsultationScreen> {
 
               const SizedBox(height: 16),
               TextField(
-                controller: _titleController,
+                controller: _detailsController,
                 readOnly: widget.isServiceProvider,
                 decoration: InputDecoration(
                   labelText: "Details",

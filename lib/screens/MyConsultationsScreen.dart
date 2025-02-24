@@ -5,6 +5,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'AddConsultationScreen.dart';
 
 class MyConsultationsScreen extends StatefulWidget {
+  final String? seniorId;
+
+  const MyConsultationsScreen({Key? key, this.seniorId}) : super(key: key);
+
   @override
   _MyConsultationsScreenState createState() => _MyConsultationsScreenState();
 }
@@ -49,17 +53,28 @@ class _MyConsultationsScreenState extends State<MyConsultationsScreen> {
   }
 
   Stream<QuerySnapshot> _fetchConsultations() {
-    if (userRole == null || assignedSeniorIds.isEmpty) {
+    if (userRole == null) {
       return const Stream.empty();
     }
 
-    return FirebaseFirestore.instance
+    Query baseQuery = FirebaseFirestore.instance
         .collection('consultations')
-        .where('consultation_type', isEqualTo: userRole) // 🔹 Filter by role
-        .where('senior_id', whereIn: assignedSeniorIds) // 🔹 Filter by assigned seniors
-        .orderBy('updated_at', descending: true) // Sort by latest update
-        .snapshots();
+        .where('consultation_type', isEqualTo: userRole) // Filter by role
+        .orderBy('updated_at', descending: true); // Sort by latest update
+
+    if (widget.seniorId != null) {
+      // 🔹 If seniorId is provided, filter by that specific senior
+      baseQuery = baseQuery.where('senior_id', isEqualTo: widget.seniorId);
+    } else if (assignedSeniorIds.isNotEmpty) {
+      // 🔹 Otherwise, filter by all assigned seniors
+      baseQuery = baseQuery.where('senior_id', whereIn: assignedSeniorIds);
+    } else {
+      return const Stream.empty();
+    }
+
+    return baseQuery.snapshots();
   }
+
 
   @override
   Widget build(BuildContext context) {

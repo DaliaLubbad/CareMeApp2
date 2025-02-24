@@ -24,9 +24,11 @@ class _MyBillsScreenState extends State<MyBillsScreen> {
     return billsSnapshot.docs.map((doc) {
       final bill = doc.data();
       bill['id'] = doc.id;
+      bill['status'] = bill.containsKey('status') ? bill['status'] : 'Unpaid'; // ✅ Include status
       return bill;
     }).toList();
   }
+
 // Add a sorting dropdown
   String _selectedSortOption = 'Date'; // Default sorting option
 
@@ -160,13 +162,33 @@ class _MyBillsScreenState extends State<MyBillsScreen> {
                       return Card(
                         margin: const EdgeInsets.symmetric(vertical: 8),
                         child: ListTile(
-                          title: Text(bill['bill_type']),
+                          title: Text(bill['bill_type'],style: TextStyle(color: Color(0xFF308A99),fontWeight: FontWeight.bold,),),
                           subtitle: Text(
-                            'Due Date: ${(bill['due_date'] as Timestamp).toDate().toLocal().toString().split(' ')[0]}\nAmount: \$${bill['amount_due']}',
+                            'Due Date: ${(bill['due_date'] as Timestamp).toDate().toLocal().toString().split(' ')[0]}\n'
+                                'Amount: \$${bill['amount_due']}\n'
+                                'Status: ${bill['status']}', // ✅ Show status
+                            style: TextStyle(
+                              color: bill['status'] == 'Paid' ? Colors.green[300] : Colors.red[300], // ✅ Green for paid, red for unpaid
+                             // fontWeight: FontWeight.bold,
+                            ),
                           ),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
+                              IconButton(
+                                icon: Icon(
+                                  bill['status'] == 'Paid' ? Icons.check_circle : Icons.radio_button_unchecked, // ✅ Toggle icon
+                                  color: bill['status'] == 'Paid' ? Colors.green : Colors.grey,
+                                ),
+                                onPressed: () async {
+                                  // Toggle status between Paid/Unpaid
+                                  String newStatus = bill['status'] == 'Paid' ? 'Unpaid' : 'Paid';
+                                  await FirebaseFirestore.instance.collection('Bills').doc(bill['id']).update({
+                                    'status': newStatus,
+                                  });
+                                  setState(() {}); // Refresh UI
+                                },
+                              ),
                               IconButton(
                                 icon: const Icon(Icons.edit, color: Color(0xFF308A99)),
                                 onPressed: () {
@@ -188,6 +210,8 @@ class _MyBillsScreenState extends State<MyBillsScreen> {
                               ),
                             ],
                           ),
+
+
                         ),
                       );
                     },

@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
+import 'package:test1/screens/account_type_screen.dart';
 import 'AddBankCardScreen.dart';
 import 'AddElectronicWalletScreen.dart';
+import 'Add_medication_screen.dart';
 import 'AppointmentCalendarScreen.dart';
+import 'BasicInformationScreen.dart';
 import 'ChangePasswordScreen.dart';
+import 'FamilyManagementScreen.dart';
 import 'MedicalInfoScreen.dart';
+import 'MedicationListScreen.dart';
+import 'MyConsultationsScreen.dart';
+import 'bill_payments_screen.dart';
 import 'login_screen.dart';
 
 class SeniorDashboardScreen extends StatefulWidget {
@@ -21,12 +27,165 @@ class SeniorDashboardScreen extends StatefulWidget {
 class _SeniorDashboardScreenState extends State<SeniorDashboardScreen> {
   String seniorName = '';
   bool isLoading = true;
+  bool isMedicalProvider = false;
+  bool isLegalOrFinancialProvider = false;
 
   @override
   void initState() {
     super.initState();
     _fetchSeniorName();
+    _checkIfServiceProvider(); // New function to determine user role
   }
+
+  Future<void> _checkIfServiceProvider() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance.collection('other_users').doc(user.uid).get();
+      if (doc.exists) {
+        String role = doc['role'];
+        if (role == 'Medical') {
+          setState(() {
+            isMedicalProvider = true;
+          });
+        } else if (role == 'Legal & Financial') {
+          setState(() {
+            isLegalOrFinancialProvider = true;
+          });
+        }
+      }
+    }
+  }
+  void _showLogoutDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          title: Column(
+            children: [
+              Icon(Icons.logout, size: 50, color: Color(0xFF308A99)), // Logout Icon
+              const SizedBox(height: 10),
+              Text(
+                "Are you sure to log out of your account?",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 16),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+              },
+              child: Text("Cancel", style: TextStyle(color: Colors.grey, fontSize: 16)),
+            ),
+            ElevatedButton(
+              onPressed: _logoutUser, // Call the logout function
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF308A99), // Button color
+                padding: EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+              ),
+              child: Text("Log Out", style: TextStyle(color: Colors.white, fontSize: 16)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  Future<void> _logoutUser() async {
+    try {
+      await FirebaseAuth.instance.signOut(); // Sign out from Firebase
+      Navigator.pop(context); // Close the dialog
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/accountTypeScreen',  // Navigate to Choose Account Screen
+            (route) => false,  // Remove all previous routes
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Logout Failed: $e")),
+      );
+    }
+  }
+
+  void _showAddFamilyMemberDialog() {
+    TextEditingController emailController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Add Family Member"),
+          content: TextField(
+            controller: emailController,
+            decoration: const InputDecoration(
+              labelText: "Enter Family Member's Email",
+              labelStyle: TextStyle(color: Color(0xFF308A99)),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Color(0xFF308A99)),
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel", style: TextStyle(color: Colors.red)),
+            ),
+            TextButton(
+              onPressed: () => _sendFamilyRequest(emailController.text),
+              child: const Text("Send Request", style: TextStyle(color: Color(0xFF308A99))),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  Future<void> _sendFamilyRequest(String email) async {
+    if (email.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter an email!")),
+      );
+      return;
+    }
+
+    try {
+      // Check if email exists in other_users
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('other_users')
+          .where('email', isEqualTo: email)
+          .get();
+
+      if (querySnapshot.docs.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("No user found with this email.")),
+        );
+        return;
+      }
+
+      final familyMember = querySnapshot.docs.first;
+      final familyMemberId = familyMember.id;
+      final familyMemberName = familyMember['fullName'];
+
+      // Create a team request for family member
+      await FirebaseFirestore.instance.collection('team_requests').add({
+        'senior_id': widget.seniorId,
+        'user_id': familyMemberId,
+        'user_name': familyMemberName,
+        'status': 'requested',
+        'created_at': Timestamp.now(),
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Request sent successfully!")),
+      );
+      Navigator.pop(context); // Close the dialog
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
+
 
   Future<void> _fetchSeniorName() async {
     try {
@@ -144,6 +303,16 @@ class _SeniorDashboardScreenState extends State<SeniorDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF308A99),
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context);  // Navigates back to the previous screen
+          },
+        ),
+      ),
       backgroundColor: const Color(0xFF308A99),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -161,15 +330,6 @@ class _SeniorDashboardScreenState extends State<SeniorDashboardScreen> {
               seniorName,
               style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white),
             ),
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: const [
-                _ProfileStat(label: "Heart rate", value: "60"),
-                _ProfileStat(label: "Steps", value: "10000"),
-                _ProfileStat(label: "Weight", value: "55"),
-              ],
-            ),
             const SizedBox(height: 20),
             Expanded(
               child: Container(
@@ -180,50 +340,162 @@ class _SeniorDashboardScreenState extends State<SeniorDashboardScreen> {
                 child: ListView(
                   padding: const EdgeInsets.all(20),
                   children: [
-                    _ProfileOption(icon: Icons.favorite, label: "My Saved", onTap: () {}),
-                    _ProfileOption(icon: Icons.calendar_today, label: "Appointment", onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => AppointmentCalendarScreen(seniorId: widget.seniorId)),
-                      );
-                    }),
-                    _ProfileOption(icon: Icons.payment, label: "Payment Method", onTap: _authenticateUser),
-                    _ProfileOption(icon: Icons.password, label: "Change Password", onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => ChangePasswordScreen()),
-                      );
-                    }),
-                    _ProfileOption(icon: Icons.medical_services, label: "Medical Information", onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => MedicalInfoScreen(seniorId: widget.seniorId)),
-                      );
-                    }),
-                    _ProfileOption(icon: Icons.logout, label: "Logout", onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text("Logout"),
-                            content: const Text("Are you sure you want to log out?"),
-                            actions: [
-                              TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(builder: (context) => LoginScreen(userType: 'elderly')),
-                                  );
-                                },
-                                child: const Text("Log Out", style: TextStyle(color: Colors.red)),
+                    if (isMedicalProvider) ...[
+                      _ProfileOption(
+                          icon: Icons.info,
+                          label: "Basic Information",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => BasicInformationScreen(seniorId: widget.seniorId, isSenior: false),
                               ),
-                            ],
-                          );
-                        },
-                      );
-                    }, isLogout: true),
+                            );
+                          }),
+                      _ProfileOption(
+                          icon: Icons.medical_services,
+                          label: "Medical Information",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MedicalInfoScreen(seniorId: widget.seniorId, isReadOnly: true),
+                              ),
+                            );
+                          }),
+                      _ProfileOption(
+                          icon: Icons.medication,
+                          label: "Medications List",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MedicationListScreen(seniorId: widget.seniorId, isSenior: false),
+                              ),
+                            );
+                          }),
+                      _ProfileOption(
+                          icon: Icons.note_add,
+                          label: "Add Medicine",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AddMedicationScreen(seniorId: widget.seniorId, medication: null),
+                              ),
+                            );
+                          }),
+                      _ProfileOption(
+                          icon: Icons.chat,
+                          label: "Consultations",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MyConsultationsScreen(seniorId: widget.seniorId),
+                              ),
+                            );
+                          }),
+                    ] else if (isLegalOrFinancialProvider) ...[
+                      _ProfileOption(
+                          icon: Icons.info,
+                          label: "Basic Information",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => BasicInformationScreen(seniorId: widget.seniorId, isSenior: false),
+                              ),
+                            );
+                          }),
+                      _ProfileOption(
+                          icon: Icons.chat,
+                          label: "Consultations",//
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MyConsultationsScreen(seniorId: widget.seniorId),
+                              ),
+                            );
+                          }),
+                      _ProfileOption(
+                          icon: Icons.payment,
+                          label: "Bill Payment",
+                          onTap:  () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>BillPaymentScreen(seniorId: widget.seniorId),
+                              ),
+                            );
+                          }),
+                    ] else ...[
+                      _ProfileOption(
+                          icon: Icons.info,
+                          label: "Register Information",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => BasicInformationScreen(seniorId: widget.seniorId, isSenior: true),
+                              ),
+                            );
+                          }),
+                      _ProfileOption(
+                          icon: Icons.calendar_today,
+                          label: "Appointment",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AppointmentCalendarScreen(seniorId: widget.seniorId),
+                              ),
+                            );
+                          }),
+                      _ProfileOption(
+                          icon: Icons.payment,
+                          label: "Payment Method",
+                          onTap: _authenticateUser),
+                      _ProfileOption(
+                          icon: Icons.password,
+                          label: "Change Password",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => ChangePasswordScreen()),
+                            );
+                          }),
+                      _ProfileOption(
+                          icon: Icons.medical_services,
+                          label: "Medical Information",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => MedicalInfoScreen(seniorId: widget.seniorId, isReadOnly: false),
+                              ),
+                            );
+                          }),
+                      _ProfileOption(
+                          icon: Icons.group_add,
+                          label: "Add Family Member",
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FamilyManagementScreen(seniorId: widget.seniorId),
+                              ),
+                            );
+                          }),
+                      _ProfileOption(
+                        icon: Icons.logout,
+                        label: "Logout",
+                        onTap: _showLogoutDialog,
+                        isLogout: true,
+                      ),
+                    ],
+
                   ],
                 ),
               ),
@@ -233,6 +505,7 @@ class _SeniorDashboardScreenState extends State<SeniorDashboardScreen> {
       ),
     );
   }
+
 }
 
 
@@ -247,6 +520,7 @@ class _ProfileStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return Column(
       children: [
         Text(

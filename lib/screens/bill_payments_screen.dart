@@ -46,6 +46,45 @@ class _BillPaymentScreenState extends State<BillPaymentScreen> {
       ),
     ).then((_) => setState(() {})); // Refresh the list after returning
   }
+  void _showOtherBillDialog() {
+    TextEditingController billNameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Enter Bill Type", style: TextStyle(color: const Color(0xFF308A99),),),
+          content: TextField(
+            controller: billNameController,
+            decoration: const InputDecoration(
+              hintText: "Type your bill name...",
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Color(0xFF308A99)), // Change focused border color
+              ),
+            ),
+          ),
+
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context), // Close dialog
+              child: const Text("Cancel", style: TextStyle(color: const Color(0xFF308A99),),),
+            ),
+            TextButton(
+              onPressed: () {
+                String customBill = billNameController.text.trim();
+                if (customBill.isNotEmpty) {
+                  Navigator.pop(context);
+                  _navigateToAddBill(customBill); // Pass custom bill type
+                }
+              },
+              child: const Text("OK", style: TextStyle(color: const Color(0xFF308A99),),),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _authenticateAndNavigate(BuildContext context) async {
     String? password = await _promptForPassword(context);
 
@@ -196,18 +235,18 @@ class _BillPaymentScreenState extends State<BillPaymentScreen> {
                   crossAxisSpacing: 10,
                 ),
                 children: [
-                  _buildServiceTile('Mobile bill', 'assets/images/mobile_bill.jpeg', 'mobile_bill'),
-                  _buildServiceTile('Internet bill', 'assets/images/internet.jpeg', 'internet_bill'),
-                  _buildServiceTile('Car', 'assets/images/car.png', 'car'),
-                  _buildServiceTile('Water bill', 'assets/images/water.jpeg', 'water_bill'),
-                  _buildServiceTile('Electricity', 'assets/images/electricity.jpeg', 'electricity'),
-                  _buildServiceTile('Landline', 'assets/images/telephone.jpeg', 'landline'),
-                  _buildServiceTile('Insurance', 'assets/images/social_insurance.jpeg', 'insurance'),
-                  _buildServiceTile('Tickets', 'assets/images/tickets.jpeg', 'tickets'),
-                  _buildServiceTile('Gas', 'assets/images/gas.png', 'gas'),
-                  _buildServiceTile('Landline', 'assets/images/telephone.jpeg', 'landline'),
-                  _buildServiceTile('Insurance', 'assets/images/social_insurance.jpeg', 'insurance'),
-                  _buildServiceTile('Tickets', 'assets/images/tickets.jpeg', 'tickets'),
+                  _buildServiceTile('Mobile ', 'assets/images/mobile_bill.jpeg', 'Mobile_bill'),
+                  _buildServiceTile('Internet ', 'assets/images/internet.jpeg', 'Internet_bill'),
+                  _buildServiceTile('Car', 'assets/images/car.png', 'Car'),
+                  _buildServiceTile('Water ', 'assets/images/water.jpeg', 'Water_bill'),
+                  _buildServiceTile('Electricity', 'assets/images/electricity.jpeg', 'Electricity'),
+                  _buildServiceTile('Landline', 'assets/images/telephone.jpeg', 'Landline'),
+                  _buildServiceTile('Insurance', 'assets/images/social_insurance.jpeg', 'Insurance'),
+                  _buildServiceTile('Tickets', 'assets/images/tickets.jpeg', 'Tickets'),
+                  _buildServiceTile('Gas', 'assets/images/gas.png', 'Gas'),
+                  _buildServiceTile('Donations', 'assets/images/donation.png', 'Donations'),
+                  _buildServiceTile('Tax', 'assets/images/tax.png', 'Tax'),
+                  _buildServiceTile('Other', 'assets/images/other.jpg', 'other'),
                 ],
               
               ),
@@ -280,7 +319,13 @@ class _BillPaymentScreenState extends State<BillPaymentScreen> {
 
   Widget _buildServiceTile(String label, String imagePath, String billType) {
     return GestureDetector(
-      onTap: () => _navigateToAddBill(billType),
+      onTap: () {
+        if (billType == "other") {
+          _showOtherBillDialog(); // Show input dialog for "Other"
+        } else {
+          _navigateToAddBill(billType);
+        }
+      },
       child: Column(
         children: [
           CircleAvatar(

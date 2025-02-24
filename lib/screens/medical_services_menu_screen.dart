@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'ConsultationsScreen.dart';
 import 'MedicationListScreen.dart';
-import 'medical_service_providers_list.dart';
+import 'ServiceProviderScreen.dart';
 
 class MedicalServicesMenuScreen extends StatelessWidget {
   final String seniorId; // Add this parameter
@@ -44,7 +44,7 @@ class MedicalServicesMenuScreen extends StatelessWidget {
                     context,
                     MaterialPageRoute(
                       builder: (context) => MedicationListScreen(
-                        seniorId: seniorId, // Pass the seniorId here
+                        seniorId: seniorId, isSenior: true, // Pass the seniorId here
                       ),
                     ),
                   );
@@ -103,8 +103,8 @@ class MedicalServicesMenuScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => MedicalServiceProviderScreen(
-                        seniorId: seniorId,
+                      builder: (context) => ServiceProviderScreen(
+                        seniorId: seniorId, serviceType: 'Medical',
                       ),
                     ),
                   );

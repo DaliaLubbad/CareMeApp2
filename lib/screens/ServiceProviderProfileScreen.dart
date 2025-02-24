@@ -3,9 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ServiceProviderProfileScreen extends StatefulWidget {
   final String userId;
-  final bool isReadOnly;
+  final bool isReadOnly; // Determines if profile is editable
 
-  const ServiceProviderProfileScreen({Key? key, required this.userId, this.isReadOnly = false}) : super(key: key);
+  const ServiceProviderProfileScreen({Key? key, required this.userId, required this.isReadOnly}) : super(key: key);
 
   @override
   _ServiceProviderProfileScreenState createState() => _ServiceProviderProfileScreenState();
@@ -14,9 +14,10 @@ class ServiceProviderProfileScreen extends StatefulWidget {
 class _ServiceProviderProfileScreenState extends State<ServiceProviderProfileScreen> {
   Map<String, dynamic>? userData;
   bool isLoading = true;
-  bool isEditing = false;
+  bool isEditing = false; // Controls edit mode only for service providers
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
+  final TextEditingController countryController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   final TextEditingController studyFieldController = TextEditingController();
 
@@ -34,11 +35,18 @@ class _ServiceProviderProfileScreenState extends State<ServiceProviderProfileScr
           userData = doc.data();
           nameController.text = userData!["fullName"] ?? "";
           phoneController.text = userData!["phone"] ?? "";
+          countryController.text = userData!["country"] ?? "";
           descriptionController.text = userData!["description"] ?? "";
           studyFieldController.text = userData!["study_field"] ?? "";
           isLoading = false;
 
-          if (!widget.isReadOnly && (studyFieldController.text.isEmpty || descriptionController.text.isEmpty)) {
+          // Get the user role and debug print it
+          String userRole = userData!["role"] ?? "";
+          print("Fetched User Role: $userRole");  // Debugging step
+
+          // Ensure "Family Member" is checked properly (case-sensitive fix)
+          if (!widget.isReadOnly && userRole.trim().toLowerCase() != "family member" &&
+              (studyFieldController.text.isEmpty || descriptionController.text.isEmpty)) {
             isEditing = true;
             WidgetsBinding.instance.addPostFrameCallback((_) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -50,27 +58,33 @@ class _ServiceProviderProfileScreenState extends State<ServiceProviderProfileScr
             });
           }
         });
+      } else {
+        print("User document does not exist");
       }
     } catch (e) {
       setState(() {
         isLoading = false;
       });
+      print("Error fetching user data: $e"); // Debugging error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error loading profile: $e")),
       );
     }
   }
 
+
+
   Future<void> _updateProfile() async {
     try {
       await FirebaseFirestore.instance.collection('other_users').doc(widget.userId).update({
         "fullName": nameController.text,
         "phone": phoneController.text,
+        "country": countryController.text,
         "description": descriptionController.text,
         "study_field": studyFieldController.text,
       });
       setState(() {
-        isEditing = false;
+        isEditing = false; // ✅ Make profile read-only again after saving
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Profile updated successfully!")),
@@ -90,7 +104,7 @@ class _ServiceProviderProfileScreenState extends State<ServiceProviderProfileScr
         backgroundColor: const Color(0xff308A99),
         foregroundColor: Colors.white,
         actions: widget.isReadOnly
-            ? []
+            ? [] // ✅ Seniors cannot edit, so hide the button
             : [
           IconButton(
             icon: Icon(isEditing ? Icons.save : Icons.edit),
@@ -99,7 +113,7 @@ class _ServiceProviderProfileScreenState extends State<ServiceProviderProfileScr
                 _updateProfile();
               }
               setState(() {
-                isEditing = !isEditing;
+                isEditing = !isEditing; // Toggle edit mode
               });
             },
           ),
@@ -121,16 +135,17 @@ class _ServiceProviderProfileScreenState extends State<ServiceProviderProfileScr
                 child: Icon(Icons.person, size: 50, color: Colors.grey[700]),
               ),
               const SizedBox(height: 16),
-              _buildEditableField("Full Name", nameController, isEditable: !widget.isReadOnly),
+              _buildEditableField("Full Name", nameController, isEditable: false), // Full name never changes
               Text(
                 "Role: ${userData!["role"]}",
                 style: const TextStyle(fontSize: 18, color: Colors.black54),
               ),
               const SizedBox(height: 16),
-              _buildEditableField("Phone", phoneController, icon: Icons.phone, isEditable: !widget.isReadOnly),
+              _buildEditableField("Phone", phoneController, icon: Icons.phone, isEditable: isEditing),
               _buildEditableField("Email", TextEditingController(text: userData!["email"]), isEditable: false, icon: Icons.email),
-              _buildEditableField("Study Field", studyFieldController, icon: Icons.school, color: Color(0xff308A99), isEditable: !widget.isReadOnly),
-              _buildEditableField("Description", descriptionController, icon: Icons.info, color: Color(0xff308A99), isEditable: !widget.isReadOnly),
+              _buildEditableField("Country", countryController, icon: Icons.public, isEditable: isEditing),
+              _buildEditableField("Study Field", studyFieldController, icon: Icons.school, isEditable: isEditing),
+              _buildEditableField("Description", descriptionController, icon: Icons.info, isEditable: isEditing),
             ],
           ),
         ),
@@ -138,7 +153,8 @@ class _ServiceProviderProfileScreenState extends State<ServiceProviderProfileScr
     );
   }
 
-  Widget _buildEditableField(String label, TextEditingController controller, {bool isEditable = true, IconData? icon, Color color = const Color(0xff308A99)}) {
+  Widget _buildEditableField(String label, TextEditingController controller,
+      {bool isEditable = true, IconData? icon, Color color = const Color(0xff308A99)}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: ListTile(

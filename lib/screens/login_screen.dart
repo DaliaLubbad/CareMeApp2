@@ -108,7 +108,71 @@ class _LoginScreenState extends State<LoginScreen> {
       );
     }
   }
+  Future<void> _forgotPassword() async {
+    String email = "";
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Forgot Password",
+            style: TextStyle(color: Color(0xff308A99)),
+          ),
 
+
+          content: TextField(
+            onChanged: (value) {
+              email = value;
+            },
+            keyboardType: TextInputType.emailAddress,
+            decoration: InputDecoration(
+              hintText: "Enter your email",
+              prefixIcon: Icon(Icons.email),
+              border: OutlineInputBorder(),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: Color(0xFF308A99)), // Set focused border color
+              ),
+
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                if (email.isNotEmpty) {
+                  try {
+                    await _auth.sendPasswordResetEmail(email: email.trim());
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Password reset email sent! Check your inbox.")),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("Error: ${e.toString()}")),
+                    );
+                  }
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Please enter your email.")),
+                  );
+                }
+              },
+              child: Text("Send",
+                style: TextStyle(color: Color(0xff308A99)),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text("Cancel",
+                style: TextStyle(color: Color(0xff308A99)),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -148,6 +212,16 @@ class _LoginScreenState extends State<LoginScreen> {
                 icon: Icons.lock,
                 isPassword: true,
                 controller: _passwordController,
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: _forgotPassword,
+                  child: const Text(
+                    "Forgot Password?",
+                    style: TextStyle(color: Color(0xff308A99)),
+                  ),
+                ),
               ),
               const SizedBox(height: 20),
               SizedBox(

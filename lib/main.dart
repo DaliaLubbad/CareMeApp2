@@ -16,7 +16,7 @@ import 'firebase_options.dart';
 import 'screens/AddMedicalInfoScreen.dart';
 import 'screens/MedicationListScreen.dart';
 import 'screens/SeniorDashboardScreen.dart';
-import 'screens/medical_service_providers_list.dart';
+import 'screens/ServiceProviderScreen.dart';
 import 'screens/medical_services_menu_screen.dart';
 
 void main() async {
@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
 
-      title: 'Flutter Demo',
+      title: 'Care4Me',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         textSelectionTheme: TextSelectionThemeData(
@@ -44,7 +44,12 @@ class MyApp extends StatelessWidget {
         ),
       ),
 
-      home:AccountTypeScreen(),
+      initialRoute: '/accountTypeScreen',
+      routes: {
+        '/accountTypeScreen': (context) => AccountTypeScreen(),
+
+      },
+
 
     );
   }

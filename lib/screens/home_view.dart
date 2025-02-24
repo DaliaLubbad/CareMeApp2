@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'AddMedicalInfoScreen.dart';
 import 'DocumentManagementScreen.dart';
+import 'LegalFinancialServicesScreen.dart';
 import 'MedicationListScreen.dart';
 import 'SeniorDashboardScreen.dart';
 import 'bill_payments_screen.dart';
@@ -131,8 +132,6 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Icon(Icons.notifications_none,
                           color: Colors.black),
-                      SizedBox(width: 16),
-                      Icon(Icons.menu, color: Colors.black),
                     ],
                   ),
                 ],
@@ -203,8 +202,15 @@ class _HomePageState extends State<HomePage> {
                       ),
                       ),
                       _buildServiceCard('Technical Support', 'assets/images/technical_support.png', () {}),
-                      _buildServiceCard('Legal and Financial Advice', 'assets/images/legal_and_financial_advice.png', () {}),
-                      _buildServiceCard('Emergency Services', 'assets/images/emergency services.png', () {}),
+                      _buildServiceCard('Legal and Financial Services', 'assets/images/legal_and_financial_advice.png', ()  => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => LegalFinancialServicesScreen(
+                            seniorId: widget.senior_id, // Pass the correct senior ID
+                          ),
+                        ),
+                      ),
+                      ),
                     ],
                   ),
                 ],

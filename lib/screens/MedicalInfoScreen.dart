@@ -3,13 +3,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MedicalInfoScreen extends StatefulWidget {
   final String seniorId;
+  final bool isReadOnly; // ✅ New parameter to control edit mode
 
-  const MedicalInfoScreen({Key? key, required this.seniorId})
+  const MedicalInfoScreen({Key? key, required this.seniorId, required this.isReadOnly})
       : super(key: key);
 
   @override
-  _MedicalInfoScreenState createState() =>
-      _MedicalInfoScreenState();
+  _MedicalInfoScreenState createState() => _MedicalInfoScreenState();
 }
 
 class _MedicalInfoScreenState extends State<MedicalInfoScreen> {
@@ -26,10 +26,7 @@ class _MedicalInfoScreenState extends State<MedicalInfoScreen> {
 
   Future<void> _fetchMedicalData() async {
     try {
-      final doc = await _firestore
-          .collection('Medical_data')
-          .doc(widget.seniorId)
-          .get();
+      final doc = await _firestore.collection('Medical_data').doc(widget.seniorId).get();
 
       if (doc.exists) {
         final data = doc.data();
@@ -52,6 +49,8 @@ class _MedicalInfoScreenState extends State<MedicalInfoScreen> {
   }
 
   Future<void> _saveMedicalData() async {
+    if (widget.isReadOnly) return; // ✅ Prevent saving if read-only
+
     try {
       await _firestore.collection('Medical_data').doc(widget.seniorId).set({
         'blood_type': _bloodTypeController.text,
@@ -102,23 +101,23 @@ class _MedicalInfoScreenState extends State<MedicalInfoScreen> {
             _buildTextField('Illnesses', _illnessesController),
             _buildTextField('Notes', _notesController, maxLines: 3),
             const SizedBox(height: 20),
-            Center(
-              child: ElevatedButton(
-                onPressed: _saveMedicalData,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF308A99), // App color
-                  padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+            if (!widget.isReadOnly) // ✅ Only show save button if editable
+              Center(
+                child: ElevatedButton(
+                  onPressed: _saveMedicalData,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF308A99), // App color
+                    padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'Save Information',
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
-                child: const Text(
-                  'Save Information',
-                  style: TextStyle(color: Colors.white),
-                ),
               ),
-
-            ),
           ],
         ),
       ),
@@ -133,6 +132,7 @@ class _MedicalInfoScreenState extends State<MedicalInfoScreen> {
         controller: controller,
         keyboardType: keyboardType,
         maxLines: maxLines,
+        enabled: !widget.isReadOnly, // ✅ Disable editing if read-only
         decoration: InputDecoration(
           labelText: label,
           labelStyle: const TextStyle(color: Color(0xFF308A99)), // App color

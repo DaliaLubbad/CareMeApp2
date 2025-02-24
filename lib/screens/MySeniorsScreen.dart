@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'SeniorDashboardScreen.dart';
+import 'home_view.dart';
+
 class MySeniorsScreen extends StatefulWidget {
   final String userId;
 
@@ -71,12 +74,44 @@ class _MySeniorsScreenState extends State<MySeniorsScreen> {
     });
   }
 
-  void _navigateToSeniorProfile(String seniorId) {
-    // Navigate to Senior Profile Screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Navigating to Senior Profile: $seniorId")),
-    );
+  void _navigateToSeniorProfile(String seniorId) async {
+    try {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('other_users')
+          .doc(widget.userId)
+          .get();
+
+      if (userDoc.exists) {
+        String userRole = userDoc.data()?['role'] ?? '';
+
+        if (userRole.toLowerCase() == 'medical') {
+          // Navigate to Senior Dashboard
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => SeniorDashboardScreen(seniorId: seniorId)),
+          );
+        } else if (userRole.toLowerCase() == 'family member') {
+          // Navigate to Home Screen
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage(senior_id: seniorId,)),
+          );  // Ensure this route is defined
+        } else if (userRole.toLowerCase() == 'legal & financial') {
+          // Navigate to Front Screen (Replace with actual screen)
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => SeniorDashboardScreen(seniorId: seniorId)),
+          );
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error determining role: $e")),
+      );
+    }
   }
+
+
 
   @override
   Widget build(BuildContext context) {

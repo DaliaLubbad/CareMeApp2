@@ -3,16 +3,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'ServiceProviderProfileScreen.dart';
 
-class MedicalServiceProviderScreen extends StatefulWidget {
+class ServiceProviderScreen extends StatefulWidget {
   final String seniorId; // Senior ID to link the booking.
 
-  const MedicalServiceProviderScreen({Key? key, required this.seniorId}) : super(key: key);
+  const ServiceProviderScreen({Key? key, required this.seniorId, required this.serviceType}) : super(key: key);
+
+  final String serviceType; // Medical, Legal, or Financial
+
 
   @override
-  _MedicalServiceProviderScreenState createState() => _MedicalServiceProviderScreenState();
+  _ServiceProviderScreenState createState() => _ServiceProviderScreenState();
 }
 
-class _MedicalServiceProviderScreenState extends State<MedicalServiceProviderScreen> {
+class _ServiceProviderScreenState extends State<ServiceProviderScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -24,13 +27,35 @@ class _MedicalServiceProviderScreenState extends State<MedicalServiceProviderScr
     super.initState();
     _fetchCurrentProvider();
   }
+  Future<void> _cancelOrRemoveProvider(String providerId) async {
+    try {
+      final snapshot = await _firestore
+          .collection('team_requests')
+          .where('senior_id', isEqualTo: widget.seniorId)
+          .where('user_id', isEqualTo: providerId)
+          .get();
+
+      if (snapshot.docs.isNotEmpty) {
+        await _firestore.collection('team_requests').doc(snapshot.docs.first.id).delete();
+        setState(() {
+          _fetchCurrentProvider(); // Refresh the provider list
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
 
   Future<void> _fetchCurrentProvider() async {
     final snapshot = await _firestore
         .collection('team_requests')
         .where('senior_id', isEqualTo: widget.seniorId)
         .where('status', isEqualTo: 'accepted')
+        .where('service_type', isEqualTo: widget.serviceType) // Filter by service type
         .get();
+
 
     if (snapshot.docs.isNotEmpty) {
       setState(() {
@@ -42,7 +67,7 @@ class _MedicalServiceProviderScreenState extends State<MedicalServiceProviderScr
   Future<List<Map<String, dynamic>>> _fetchMedicalProviders() async {
     final providersSnapshot = await _firestore
         .collection('other_users')
-        .where('role', isEqualTo: 'medical')
+        .where('role', isEqualTo: widget.serviceType)
         .get();
 
     final requestsSnapshot = await _firestore
@@ -50,24 +75,25 @@ class _MedicalServiceProviderScreenState extends State<MedicalServiceProviderScr
         .where('senior_id', isEqualTo: widget.seniorId)
         .get();
 
-    // Check if a "Requested" provider exists
-    String? requestedProviderId;
-    String? requestedStatus;
-    if (requestsSnapshot.docs.isNotEmpty) {
-      final currentRequest = requestsSnapshot.docs.first.data();
-      requestedProviderId = currentRequest['user_id'];
-      requestedStatus = currentRequest['status'];
-    }
+    final requestedProviders = {
+      for (var doc in requestsSnapshot.docs) doc['user_id']: doc['status']
+    };
 
-    // Map providers and set status
-    return providersSnapshot.docs.map((doc) {
+    return providersSnapshot.docs
+        .where((doc) =>
+    widget.serviceType != "Family member" || // Keep all other service types
+        (requestedProviders[doc.id] == "accepted")) // Keep only accepted family members
+        .map((doc) {
       final provider = doc.data();
-      provider['isRequested'] = doc.id == requestedProviderId;
-      provider['requestStatus'] = doc.id == requestedProviderId ? requestedStatus : null;
-      provider['user_id'] = doc.id; // Include provider's ID
+      provider['user_id'] = doc.id;
+      provider['isRequested'] = requestedProviders.containsKey(doc.id);
+      provider['requestStatus'] = requestedProviders[doc.id];
       return provider;
     }).toList();
   }
+
+
+
 
 
 
@@ -77,6 +103,7 @@ class _MedicalServiceProviderScreenState extends State<MedicalServiceProviderScr
           .collection('team_requests')
           .where('senior_id', isEqualTo: widget.seniorId)
           .where('status', whereIn: ['requested', 'accepted'])
+          .where('service_type', isEqualTo: widget.serviceType)
           .get();
 
       if (existingRequestSnapshot.docs.isNotEmpty) {
@@ -92,6 +119,7 @@ class _MedicalServiceProviderScreenState extends State<MedicalServiceProviderScr
         'senior_id': widget.seniorId,
         'user_id': providerId,
         'user_name': providerName,
+        'service_type': widget.serviceType,
         'status': 'requested',
         'created_at': Timestamp.now(),
       });
@@ -100,15 +128,16 @@ class _MedicalServiceProviderScreenState extends State<MedicalServiceProviderScr
         SnackBar(content: Text('You have requested $providerName successfully!')),
       );
 
-      setState(() {
-        _fetchCurrentProvider();
-      });
+      await _fetchCurrentProvider(); // Wait for it to finish
+
+      setState(() {}); // Ensure UI refresh
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error booking provider: $e')),
       );
     }
   }
+
 
   void _showWarningDialog(String title, String message) {
     showDialog(
@@ -134,7 +163,7 @@ class _MedicalServiceProviderScreenState extends State<MedicalServiceProviderScr
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Medical Service Providers"),
+        title: Text("${widget.serviceType} Service Providers"),
         backgroundColor: const Color(0xFF308A99),
         foregroundColor: Colors.white,
       ),
@@ -192,7 +221,7 @@ class _MedicalServiceProviderScreenState extends State<MedicalServiceProviderScr
 
                   if (filteredProviders.isEmpty) {
                     return const Center(
-                      child: Text('No medical service providers found'),
+                      child: Text("No Service Providers Found"),
                     );
                   }
 
@@ -215,9 +244,56 @@ class _MedicalServiceProviderScreenState extends State<MedicalServiceProviderScr
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>ServiceProviderProfileScreen(userId: provider['user_id'],isReadOnly: true,),
+                                    builder: (context) => ServiceProviderProfileScreen(
+                                      userId: provider['user_id'],
+                                      isReadOnly: true,
+                                    ),
                                   ),
                                 );
+                              },
+                              onLongPress: () async {
+                                if (provider['isRequested']) {
+                                  bool confirm = await showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return AlertDialog(
+                                        title: Text(
+                                          provider['requestStatus'] == 'accepted'
+                                              ? "Remove Service Provider"
+                                              : "Cancel Request",
+                                        ),
+                                        content: Text(
+                                          provider['requestStatus'] == 'accepted'
+                                              ? "Are you sure you want to remove this service provider?"
+                                              : "Are you sure you want to cancel this request?",
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.pop(context, false),
+                                            child: Text("No", style: TextStyle(color: Colors.red)),
+                                          ),
+                                          TextButton(
+                                            onPressed: () async {
+                                              Navigator.pop(context, true);
+                                              await _cancelOrRemoveProvider(provider['user_id']);
+                                            },
+                                            child: Text("Yes", style: TextStyle(color: Color(0xFF308A99))),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+
+                                  if (confirm == true) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(provider['requestStatus'] == 'accepted'
+                                            ? "Provider removed successfully"
+                                            : "Request canceled successfully"),
+                                      ),
+                                    );
+                                  }
+                                }
                               },
                               leading: CircleAvatar(
                                 backgroundImage: provider['profile_picture'] != null
@@ -247,6 +323,7 @@ class _MedicalServiceProviderScreenState extends State<MedicalServiceProviderScr
                                 ),
                               ),
                             ),
+
 
                           ),
                           if (index == 0 && requestStatus == 'requested')

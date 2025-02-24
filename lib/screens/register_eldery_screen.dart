@@ -18,6 +18,7 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
 
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _countryController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
@@ -45,11 +46,12 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
       await _firestore.collection('seniors').doc(userCredential.user!.uid).set({
         'fullName': _fullNameController.text.trim(),
         'phone': _phoneController.text.trim(),
+        'country': _countryController.text.trim(),
         'email': email,
         'dob': _dobController.text.trim(),
         'gender': _gender,
         'role': 'elderly',
-        'createdAt': Timestamp.now(),
+
       });
 
       _showSuccessDialog();
@@ -204,8 +206,21 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
                 ),
               ),
               CustomTextField(
-                controller: _emailController,
+                controller: _countryController,
                 hintText: 'Enter your E-mail',
+                icon: Icons.email,
+              ),
+              const SizedBox(height: 20.0),
+              const Padding(
+                padding: EdgeInsets.only(left: 5, bottom: 5),
+                child: Text(
+                  'Country',
+                  style: TextStyle(color: Colors.black, fontSize: 16),
+                ),
+              ),
+              CustomTextField(
+                controller: _emailController,
+                hintText: 'Enter your Country',
                 icon: Icons.email,
               ),
               const SizedBox(height: 20.0),
