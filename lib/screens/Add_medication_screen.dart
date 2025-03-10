@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:test1/screens/notification_service.dart';
 import 'package:uuid/uuid.dart';
 
 class AddMedicationScreen extends StatefulWidget {
@@ -109,9 +110,10 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
       _selectedTime!.minute,
     );
 
+    String medicationId;
     if (widget.medication == null) {
-      // Add new medicine
-      final medicationId = Uuid().v4();
+      // Adding a new medicine
+      medicationId = Uuid().v4();
       await _firestore.collection('medications').doc(medicationId).set({
         'medication_id': medicationId,
         'senior_id': widget.seniorId,
@@ -124,8 +126,8 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
         'note': _noteController.text,
       });
     } else {
-      // Update existing medicine
-      final medicationId = widget.medication!['medication_id'];
+      // Updating an existing medicine
+      medicationId = widget.medication!['medication_id'];
       await _firestore.collection('medications').doc(medicationId).update({
         'medication_name': _nameController.text,
         'dosage': _dosageController.text,
@@ -136,11 +138,51 @@ class _AddMedicationScreenState extends State<AddMedicationScreen> {
       });
     }
 
+    // ✅ Call the function to schedule notifications after saving
+    _scheduleMultipleNotifications(
+      medicationId,
+      _nameController.text,
+      _dosageController.text,
+      _selectedFrequency,
+      _selectedTimesPerDay,
+      dateTime,
+    );
+
     Navigator.pop(context); // Close the screen after saving
   }
 
+  Future<void> _scheduleMultipleNotifications(
+      String medicationId,
+      String medicationName,
+      String dosage,
+      String frequency,
+      String timesPerDay,
+      DateTime firstDoseTime) async {
+    int notificationId = medicationId.hashCode; // Unique ID for notifications
 
+    for (int i = 0; i < _getNotificationCount(timesPerDay); i++) {
+      DateTime notificationTime = firstDoseTime.add(Duration(hours: i * 6)); // Example: Spacing doses every 6 hours
 
+      await NotificationService.scheduleNotification(
+        id: notificationId + i,
+        title: "Time to take your medicine",
+        body: "$medicationName ($dosage) - Please take your dose", // Ensure body is passed correctly
+        scheduledTime: notificationTime,
+      );
+    }
+  }
+  int _getNotificationCount(String timesPerDay) {
+    switch (timesPerDay) {
+      case "Once":
+        return 1;
+      case "Twice":
+        return 2;
+      case "Thrice":
+        return 3;
+      default:
+        return 1;
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(

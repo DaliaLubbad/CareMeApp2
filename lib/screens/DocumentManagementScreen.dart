@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'AddDocumentScreen.dart';
 
 class DocumentManagementScreen extends StatefulWidget {
@@ -20,44 +19,89 @@ class _DocumentManagementScreenState extends State<DocumentManagementScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => AddDocumentScreen(
-          seniorId: widget.seniorId, // Pass the correct senior ID
-        ),
+        builder: (context) => AddDocumentScreen(seniorId: widget.seniorId),
       ),
     );
   }
 
-  void _showDocumentOptions(BuildContext context, String validity) {
-    showModalBottomSheet(
+  Future<void> _editDocument(String docId, String currentName, String currentDescription) async {
+    TextEditingController nameController = TextEditingController(text: currentName);
+    TextEditingController descriptionController = TextEditingController(text: currentDescription);
+
+    showDialog(
       context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
+        return AlertDialog(
+          title: Text("Edit Document"),
+          content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                "Validity",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              SizedBox(height: 16),
-              Text(validity, style: TextStyle(fontSize: 14)),
-              SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF308A99),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+              TextField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: "Name",labelStyle: TextStyle(color: Color(0xFF308A99)),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF308A99), width: 2.0),
                   ),
                 ),
-                child: const Text("Close", style: TextStyle(color: Colors.white)),
+                cursorColor: Color(0xFF308A99),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: descriptionController,
+                decoration: InputDecoration(
+                  labelText: "Description",labelStyle: TextStyle(color: Color(0xFF308A99)),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Color(0xFF308A99), width: 2.0),
+                  ),
+                ),
+                cursorColor: Color(0xFF308A99),
               ),
             ],
           ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: Color(0xFF308A99))),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await FirebaseFirestore.instance.collection('documents').doc(docId).update({
+                  'name': nameController.text,
+                  'description': descriptionController.text,
+                });
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF308A99)),
+              child: Text("Save", style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _deleteDocument(String docId) async {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Delete Document"),
+          content: Text("Are you sure you want to delete this document?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await FirebaseFirestore.instance.collection('documents').doc(docId).delete();
+                Navigator.pop(context);
+              },
+              child: Text("Delete"),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            ),
+          ],
         );
       },
     );
@@ -73,7 +117,6 @@ class _DocumentManagementScreenState extends State<DocumentManagementScreen> {
       ),
       body: Column(
         children: [
-          // Search Bar and Add Button
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
@@ -81,55 +124,23 @@ class _DocumentManagementScreenState extends State<DocumentManagementScreen> {
                 Expanded(
                   child: TextField(
                     controller: _searchController,
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value.toLowerCase();
-                      });
-                    },
+                    onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
                     decoration: InputDecoration(
                       hintText: "Search",
                       prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Color(0xFF308A99)),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Color(0xFF308A99), width: 2.0),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        borderSide: const BorderSide(color: Color(0xFF308A99)),
-                      ),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                     ),
-                    cursorColor: const Color(0xFF308A99),
                   ),
                 ),
-                const SizedBox(width: 10),
+                SizedBox(width: 10),
                 ElevatedButton(
                   onPressed: _addDocument,
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8.0),
-                    child: Text(
-                      "Add document",
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF308A99),
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
-                    ),
-                  ),
+                  child: Text("Add document",style: TextStyle(  color: Colors.white,),),
+                  style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF308A99)),
                 ),
               ],
             ),
           ),
-          // List of Documents
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
@@ -138,7 +149,7 @@ class _DocumentManagementScreenState extends State<DocumentManagementScreen> {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Center(child: CircularProgressIndicator());
                 }
                 final documents = snapshot.data?.docs ?? [];
                 final filteredDocuments = documents.where((document) {
@@ -147,28 +158,34 @@ class _DocumentManagementScreenState extends State<DocumentManagementScreen> {
                 }).toList();
 
                 if (filteredDocuments.isEmpty) {
-                  return const Center(child: Text("No documents found."));
+                  return Center(child: Text("No documents found."));
                 }
 
                 return ListView.builder(
                   itemCount: filteredDocuments.length,
                   itemBuilder: (context, index) {
-                    final document = filteredDocuments[index].data() as Map<String, dynamic>;
+                    final document = filteredDocuments[index];
+                    final docData = document.data() as Map<String, dynamic>;
+                    final docId = document.id;
                     return Card(
-                      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                        side: const BorderSide(color: Color(0xFF308A99), width: 1.5),
-                      ),
+                      margin: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       child: ListTile(
-                        leading: const Icon(Icons.description, color: Color(0xFF308A99)),
-                        title: Text(document['name'] ?? 'Unknown Document'),
-                        subtitle: Text(document['description'] ?? 'No Description'),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.more_vert, color: Color(0xFF308A99)),
-                          onPressed: () {
-                            _showDocumentOptions(context, document['validity'] ?? 'No Validity');
+                        leading: Icon(Icons.description, color: Color(0xFF308A99)),
+                        title: Text(docData['name'] ?? 'Unknown Document'),
+                        subtitle: Text(docData['description'] ?? 'No Description'),
+                        trailing: PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'edit') {
+                              _editDocument(docId, docData['name'], docData['description']);
+                            } else if (value == 'delete') {
+                              _deleteDocument(docId);
+                            }
                           },
+                          itemBuilder: (context) => [
+                            PopupMenuItem(value: 'edit', child: Text('Edit')),
+                            PopupMenuItem(value: 'delete', child: Text('Delete')),
+                          ],
                         ),
                       ),
                     );

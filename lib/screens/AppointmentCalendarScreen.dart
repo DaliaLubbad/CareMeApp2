@@ -78,6 +78,7 @@ class _AppointmentCalendarScreenState extends State<AppointmentCalendarScreen> {
             selectedDayPredicate: (day) {
               return isSameDay(_selectedDay, day);
             },
+
             onDaySelected: (selectedDay, focusedDay) {
               setState(() {
                 _selectedDay = selectedDay;
@@ -88,7 +89,13 @@ class _AppointmentCalendarScreenState extends State<AppointmentCalendarScreen> {
             onPageChanged: (focusedDay) {
               _focusedDay = focusedDay;
             },
+            daysOfWeekHeight: 40, // 🔥 Increase this value (default is ~16)
+            daysOfWeekStyle: const DaysOfWeekStyle(
+              weekdayStyle: TextStyle(fontSize: 16), // 🔥 Increase font size if needed
+
+            ),
             calendarStyle: const CalendarStyle(
+
               todayDecoration: BoxDecoration(
                 color: Colors.orange,
                 shape: BoxShape.circle,

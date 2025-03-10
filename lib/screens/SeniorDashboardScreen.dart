@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:test1/screens/FontSizeSettingsScreen.dart';
 import 'package:test1/screens/account_type_screen.dart';
+import 'package:test1/screens/zoom_provider.dart';
+import 'package:test1/screens/zoom_settings_screen.dart';
 import 'AddBankCardScreen.dart';
 import 'AddElectronicWalletScreen.dart';
 import 'Add_medication_screen.dart';
@@ -94,6 +98,8 @@ class _SeniorDashboardScreenState extends State<SeniorDashboardScreen> {
   }
   Future<void> _logoutUser() async {
     try {
+      final zoomProvider = Provider.of<ZoomProvider>(context, listen: false);
+      zoomProvider.resetZoom();
       await FirebaseAuth.instance.signOut(); // Sign out from Firebase
       Navigator.pop(context); // Close the dialog
       Navigator.pushNamedAndRemoveUntil(
@@ -488,6 +494,17 @@ class _SeniorDashboardScreenState extends State<SeniorDashboardScreen> {
                               ),
                             );
                           }),
+                      _ProfileOption(
+                        icon: Icons.zoom_in,
+                        label: "Zoom Settings",
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => ZoomSettingsScreen()),
+                          );
+                        },
+                      ),
+
                       _ProfileOption(
                         icon: Icons.logout,
                         label: "Logout",

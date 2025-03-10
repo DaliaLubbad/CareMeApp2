@@ -10,12 +10,13 @@ class AddConsultationScreen extends StatefulWidget {
   final String consultationType;
   final QueryDocumentSnapshot? existingConsultation;
   final bool isServiceProvider; // Determines if it's a service provider
-
+  final String? consultantId;
   AddConsultationScreen({
     required this.seniorId,
     required this.consultationType,
     this.existingConsultation,
     required this.isServiceProvider,
+    this.consultantId,
   });
 
   @override
@@ -28,10 +29,13 @@ class _AddConsultationScreenState extends State<AddConsultationScreen> {
   final TextEditingController _replyController = TextEditingController();
   String? attachedFileUrl;
   User? currentUser = FirebaseAuth.instance.currentUser;
+  String consultantName = "Waiting...";
+
 
   @override
   void initState() {
     super.initState();
+
     if (widget.existingConsultation != null) {
       var consultationData = widget.existingConsultation!.data() as Map<String, dynamic>?;
 
@@ -39,6 +43,34 @@ class _AddConsultationScreenState extends State<AddConsultationScreen> {
       _detailsController.text = consultationData?['details'] ?? '';
       attachedFileUrl = consultationData?['attached_document'] ?? '';
       _replyController.text = consultationData?['consultation_reply'] ?? '';
+
+      // Fetch the consultant who replied (not the current one)
+      if (consultationData?['consultation_replied_by'] != null) {
+        getConsultantName(consultationData!['consultation_replied_by']).then((name) {
+          setState(() {
+            consultantName = name;
+          });
+        });
+      } else {
+        consultantName = "Waiting...";
+      }
+    }
+  }
+
+  Future<String> getConsultantName(String consultantId) async {
+    try {
+      DocumentSnapshot doc = await FirebaseFirestore.instance
+          .collection('other_users')
+          .doc(consultantId)
+          .get();
+
+      if (doc.exists) {
+        return doc['fullName'] ?? "Waiting..."; // Fetching name
+      } else {
+        return "Waiting...";
+      }
+    } catch (e) {
+      return "Error Fetching Name";
     }
   }
 
@@ -62,15 +94,16 @@ class _AddConsultationScreenState extends State<AddConsultationScreen> {
           .collection('consultations')
           .doc(widget.existingConsultation!.id)
           .update({
-        'consultation_reply': _replyController.text,  // ✅ Only updating the reply
-        'updated_at': Timestamp.now(),  // ✅ Updating timestamp
+        'consultation_reply': _replyController.text,
+        'consultation_replied_by': currentUser?.uid, // Store consultant's ID
+        'updated_at': Timestamp.now(),
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Reply updated successfully")),
       );
 
-      setState(() {});  // ✅ Refresh the UI after update
+      setState(() {});  // Refresh UI after update
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Error: $e")),
@@ -79,11 +112,12 @@ class _AddConsultationScreenState extends State<AddConsultationScreen> {
   }
 
 
+
   Widget _buildReplySection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Consultant's Reply", style: TextStyle(color: Color(0xFF308A99), fontSize: 16)),
+        Text("Consultant's Reply :$consultantName", style: TextStyle(color: Color(0xFF308A99), fontSize: 16)),
         const SizedBox(height: 5),
         TextField(
           controller: _replyController,
@@ -154,6 +188,7 @@ class _AddConsultationScreenState extends State<AddConsultationScreen> {
           'consultation_type': widget.consultationType,
           'title': _titleController.text,
           'details': _detailsController.text,
+          'consultant_id': widget.consultantId ?? '', // ✅ Save only if consultant
           'attached_document': attachedFileUrl ?? '',
           'created_at': Timestamp.now(),
           'updated_at': Timestamp.now(),

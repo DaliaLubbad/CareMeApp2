@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:test1/screens/register_admin_screen.dart';
 import 'package:test1/screens/register_eldery_screen.dart';
+import 'package:test1/screens/zoom_provider.dart';
 
 import 'login_screen.dart';
 
@@ -16,6 +18,8 @@ class _AccountTypeScreenState extends State<AccountTypeScreen> {
 
   void selectAccountType(String accountType) {
     setState(() {
+      final zoomProvider = Provider.of<ZoomProvider>(context, listen: false);
+      zoomProvider.resetZoom();
       selectedAccountType = accountType;
       print("Selected Account Type: $selectedAccountType");
     });

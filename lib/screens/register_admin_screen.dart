@@ -22,7 +22,7 @@ class _RegisterScreenAdminState extends State<RegisterScreenAdmin> {
   final TextEditingController _countryController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-
+  final TextEditingController _studyController = TextEditingController();
   String? _selectedRole; // Selected role
 
   final List<String> _roles = [
@@ -54,6 +54,7 @@ class _RegisterScreenAdminState extends State<RegisterScreenAdmin> {
         'email': _emailController.text.trim(),
         'country': _countryController.text.trim(),
         'description': _descriptionController.text.trim(),
+        'study_field': _studyController.text.trim(),
         'role': _selectedRole, // Save selected role
 
       });
@@ -145,6 +146,8 @@ class _RegisterScreenAdminState extends State<RegisterScreenAdmin> {
               CustomTextField(controller: _emailController, hintText: 'Enter your E-mail', icon: Icons.email),
               const _FieldLabel(label: 'Country'),
               CustomTextField(controller: _countryController, hintText: 'Enter your Country', icon: Icons.public),
+              const _FieldLabel(label: 'Study Field'),
+              CustomTextField(controller: _studyController, hintText: 'Enter your Country', icon: Icons.school),
 
 
               const SizedBox(height: 20.0),

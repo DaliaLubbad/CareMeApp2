@@ -17,7 +17,8 @@ class _MyConsultationsScreenState extends State<MyConsultationsScreen> {
   String searchQuery = "";
   String? userId = FirebaseAuth.instance.currentUser?.uid;
   String? userRole; // Medical, Legal, etc.
-  List<String> assignedSeniorIds = []; // Seniors assigned to this service provider
+  List<String> assignedSeniorIds = [];
+  // Seniors assigned to this service provider
 
   @override
   void initState() {
@@ -158,6 +159,7 @@ class _MyConsultationsScreenState extends State<MyConsultationsScreen> {
                                 MaterialPageRoute(
                                   builder: (context) => AddConsultationScreen(
                                     consultationType: consultation['consultation_type'], // Pass correct type
+                                    consultantId: userId,
                                     seniorId: consultation['senior_id'], // Pass senior ID
                                     existingConsultation: consultation, // Pass the full document for details
                                     isServiceProvider: true, // Set as service provider

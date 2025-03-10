@@ -17,6 +17,7 @@ class AddDocumentScreen extends StatefulWidget {
 class _AddDocumentScreenState extends State<AddDocumentScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _urlController = TextEditingController();
   String? _uploadedFileUrl;
   bool _isUploading = false;
 
@@ -72,8 +73,7 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
 
   Future<void> _saveDocument() async {
     if (_nameController.text.isEmpty ||
-        _descriptionController.text.isEmpty ||
-        _uploadedFileUrl == null) {
+        _descriptionController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please fill all fields and upload a document")),
       );
@@ -88,8 +88,7 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
         'senior_id': widget.seniorId,
         'name': _nameController.text,
         'description': _descriptionController.text,
-        'file_url': _uploadedFileUrl,
-        'validity': 'N/A', // Default validity or update if needed
+        'file_url': _urlController.text,
         'uploaded_at': Timestamp.now(),
       });
 
@@ -140,6 +139,29 @@ class _AddDocumentScreenState extends State<AddDocumentScreen> {
                     borderSide: const BorderSide(color: Color(0xFF308A99), width: 2.0),
                   ),
                   hintText: "Enter document name",
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                "Document URL",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF308A99),
+                ),
+              ),
+              TextField(
+                controller: _urlController,
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Color(0xFF308A99)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(8),
+                    borderSide: const BorderSide(color: Color(0xFF308A99), width: 2.0),
+                  ),
+                  hintText: "Enter document url",
                 ),
               ),
               const SizedBox(height: 20),

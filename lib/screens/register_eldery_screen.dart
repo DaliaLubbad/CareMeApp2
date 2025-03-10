@@ -50,7 +50,7 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
         'email': email,
         'dob': _dobController.text.trim(),
         'gender': _gender,
-        'role': 'elderly',
+
 
       });
 
@@ -206,7 +206,7 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
                 ),
               ),
               CustomTextField(
-                controller: _countryController,
+                controller: _emailController,
                 hintText: 'Enter your E-mail',
                 icon: Icons.email,
               ),
@@ -219,9 +219,9 @@ class _RegisterScreenElderyState extends State<RegisterScreenEldery> {
                 ),
               ),
               CustomTextField(
-                controller: _emailController,
+                controller: _countryController,
                 hintText: 'Enter your Country',
-                icon: Icons.email,
+                icon: Icons.public,
               ),
               const SizedBox(height: 20.0),
 
